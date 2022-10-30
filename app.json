@@ -1,23 +1,22 @@
 {
   "expo": {
-    "name": "habits-rpg",
-    "slug": "habits-rpg",
-    "version": "1.0.0",
+    "name": "dayquest",
+    "slug": "dayquest",
+    "version": "0.0.1",
+    "owner": "jack-leyland",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#303030"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },

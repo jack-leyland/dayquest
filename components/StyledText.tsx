@@ -1,5 +1,11 @@
 import { Text, TextProps } from './Themed';
 
-export function MonoText(props: TextProps) {
-  return <Text {...props} style={[props.style, { fontFamily: 'space-mono' }]} />;
+export function EuphoriaText(props: TextProps) {
+  return <Text {...props} style={[props.style, { fontFamily: 'euphoria' }]} />;
+}
+
+export function ThonburiLight(props: TextProps) {
+  return (
+    <Text {...props} style={[props.style, { fontFamily: 'thonburi-light' }]} />
+  );
 }

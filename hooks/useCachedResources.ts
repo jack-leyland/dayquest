@@ -10,19 +10,20 @@ export default function useCachedResources() {
   useEffect(() => {
     async function loadResourcesAndDataAsync() {
       try {
-        SplashScreen.preventAutoHideAsync();
-
         // Load fonts
         await Font.loadAsync({
           ...FontAwesome.font,
-          'space-mono': require('../assets/fonts/SpaceMono-Regular.ttf'),
+          'euphoria': require('../assets/fonts/EuphoriaScript-Regular.ttf'),
+          'thonburi-regular': require('../assets/fonts/Thonburi-Regular.ttf'),
+          'thonburi-bold': require('../assets/fonts/Thonburi-Bold.ttf'),
+          'thonburi-light': require('../assets/fonts/Thonburi-Light.ttf'),
         });
       } catch (e) {
         // We might want to provide this error information to an error reporting service
         console.warn(e);
       } finally {
         setLoadingComplete(true);
-        SplashScreen.hideAsync();
+        //SplashScreen.hideAsync();
       }
     }
 
