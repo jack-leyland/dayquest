@@ -9,3 +9,16 @@ export function ThonburiLight(props: TextProps) {
     <Text {...props} style={[props.style, { fontFamily: 'thonburi-light' }]} />
   );
 }
+
+export function ThonburiRegular(props: TextProps) {
+  return (
+    <Text {...props} style={[props.style, { fontFamily: 'thonburi-light' }]} />
+  );
+}
+
+export function ThonburiBold(props: TextProps) {
+  return (
+    <Text {...props} style={[props.style, { fontFamily: 'thonburi-light' }]} />
+  );
+}
+
