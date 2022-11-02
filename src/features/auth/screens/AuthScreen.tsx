@@ -4,9 +4,11 @@ import {
   ImageBackground,
   Animated,
   Text,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 
 import LevelUpIcon from "../../../../assets/noun-level-up.svg";
@@ -18,27 +20,26 @@ import {
 } from "../authSlice";
 import ActivityIndicatorLoader from "../../../common/components/ActivityIndicatorLoader";
 import SignInPicker from "../components/SignInPicker";
-
+import RegistrationModal from "../components/RegistrationModal";
+import LoginModal from "../components/LoginModal";
 
 export default function AuthScreen() {
-
   const fadeLogo = useRef(new Animated.Value(0)).current;
   const fadeLoader = useRef(new Animated.Value(0)).current;
   const [isAnimationComplete, setAnimationComplete] = useState(false);
 
   const dispatch = useDispatch();
-  const activeModal = useSelector(selectActiveModal)
+  const activeModal = useSelector(selectActiveModal);
 
   const lastUserTokens = useLocalTokens();
   useEffect(() => {
     if (isAnimationComplete) {
       if (!lastUserTokens.access || !lastUserTokens.refresh) {
-        dispatch(setDisplayedModal("picker"))
+        dispatch(setDisplayedModal("picker"));
       } else {
-        dispatch(disableAuthNavigator())
+        dispatch(disableAuthNavigator());
       }
     }
-
   }, [isAnimationComplete]);
 
   const startAnimations = () => {
@@ -57,15 +58,16 @@ export default function AuthScreen() {
   };
 
   return (
-    <View style={styles.viewContainer}>
-      <ImageBackground
-        source={require("../../../../assets/images/splash.png")}
-        style={styles.background}
-        onLoad={() => {
-          SplashScreen.hideAsync();
-          startAnimations();
-        }}
-      >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.viewContainer}>
+        <ImageBackground
+          source={require("../../../../assets/images/splash.png")}
+          style={styles.background}
+          onLoad={() => {
+            SplashScreen.hideAsync();
+            startAnimations();
+          }}
+        >
           <Animated.View style={{ ...styles.logoContainer, opacity: fadeLogo }}>
             <Text style={styles.logoText}>DayQuest</Text>
             <View style={styles.sloganBox}>
@@ -73,21 +75,21 @@ export default function AuthScreen() {
               <LevelUpIcon width={40} height={40} fill={"#000000"} />
             </View>
           </Animated.View>
-
-        {activeModal === "picker" && (
-          <SignInPicker />
-        )}
-        {activeModal === "loader" && (
-            <ActivityIndicatorLoader 
+          {activeModal === "login" && <LoginModal />}
+          {activeModal === "register" && <RegistrationModal />}
+          {activeModal === "picker" && <SignInPicker />}
+          {activeModal === "loader" && (
+            <ActivityIndicatorLoader
               viewStyle={{ ...styles.loader, opacity: fadeLoader }}
-              text={"Checking in with the guild..."} 
+              text={"Checking in with the guild..."}
               textStyle={styles.loaderText}
               indicatorColor={"black"}
-              indicatorSize={"large"} 
+              indicatorSize={"large"}
             />
           )}
-      </ImageBackground>
-    </View>
+        </ImageBackground>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -108,7 +110,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
-    maxHeight:"80%"
+    maxHeight: "80%",
   },
   sloganBox: {
     flexDirection: "row",

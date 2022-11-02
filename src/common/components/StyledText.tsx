@@ -12,13 +12,13 @@ export function ThonburiLight(props: TextProps) {
 
 export function ThonburiRegular(props: TextProps) {
   return (
-    <Text {...props} style={[props.style, { fontFamily: 'thonburi-light' }]} />
+    <Text {...props} style={[props.style, { fontFamily: 'thonburi-regular' }]} />
   );
 }
 
 export function ThonburiBold(props: TextProps) {
   return (
-    <Text {...props} style={[props.style, { fontFamily: 'thonburi-light' }]} />
+    <Text {...props} style={[props.style, { fontFamily: 'thonburi-bold' }]} />
   );
 }
 

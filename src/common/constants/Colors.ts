@@ -19,6 +19,7 @@ export default {
     tabIconSelected: tintColorDark,
   },
   common: {
-    lightYellow: "#FFC563"
+    lightYellow: "#FFC563",
+    red: '#f44336'
   }
 };
