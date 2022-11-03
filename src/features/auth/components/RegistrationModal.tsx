@@ -1,4 +1,10 @@
-import { Animated, StyleSheet, Text, Pressable } from "react-native";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useRef, useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -7,9 +13,12 @@ import Colors from "../../../common/constants/Colors";
 import Layout from "../../../common/constants/Layout";
 import GrowingBottomTray from "../../../common/components/GrowingBottomTray";
 import {
+  overlayErrorModal,
   selectPreviousModalHeight,
+  setAccessToken,
   setDisplayedModal,
   setPreviousModalHeight,
+  setRefreshToken,
 } from "../authSlice";
 import {
   ThonburiBold,
@@ -17,7 +26,35 @@ import {
 } from "../../../common/components/StyledText";
 import AuthFormTextInputBox from "./AuthFormInputBox";
 import validateEmail from "../../../common/util/validateEmail";
-import { RegistrationFormStatus, RegistrationPayload } from "../types";
+import {
+  RegistrationFormStatus,
+  RegistrationPayload,
+  PasswordFormStatus,
+  FormStatus,
+  RegistrationAPIResponse,
+} from "../types";
+import authServer from "../requests";
+import { View } from "../../../common/components/Themed";
+
+const defaultFormStatus: RegistrationFormStatus = {
+  email: {
+    badInputText: "",
+    isBadInput: false,
+  },
+  username: {
+    badInputText: "",
+    isBadInput: false,
+  },
+  password: {
+    criteria: [
+      "Minimum 8 characters",
+      "At least one uppercase character",
+      "At least one lowercase character",
+      "At least one number",
+    ],
+    isBadInput: false,
+  },
+};
 
 export default function RegistrationModal() {
   const [showForm, setShowForm] = useState<Boolean>(false);
@@ -26,28 +63,11 @@ export default function RegistrationModal() {
       email: null,
       username: null,
       password: null,
-      device: null
-  });
-  const [registrationFormStatus, setRegistrationFormStatus] =
-    useState<RegistrationFormStatus>({
-      email: {
-        badInputText: "",
-        isBadInput: false,
-      },
-      username: {
-        badInputText: "",
-        isBadInput: false,
-      },
-      password: {
-        criteria: [
-          "Minimum 8 characters",
-          "At least one uppercase character",
-          "At least one lowercase character",
-          "At least one number",
-        ],
-        isBadInput: false,
-      },
     });
+
+  const [registrationFormStatus, setRegistrationFormStatus] =
+    useState<RegistrationFormStatus>(defaultFormStatus);
+  const [isLoading, setLoading] = useState<boolean>(false);
 
   const fade = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch();
@@ -71,19 +91,19 @@ export default function RegistrationModal() {
 
   const emailValidator = (email: string) => {
     const valid = validateEmail(email);
-    const update = {...registrationFormStatus};
+    const update = { ...registrationFormStatus };
     if (!email || valid) {
-      update.email = {
-          isBadInput: false,
-          badInputText: "",
-        },
-      setRegistrationFormStatus(update);
+      (update.email = {
+        isBadInput: false,
+        badInputText: "",
+      }),
+        setRegistrationFormStatus(update);
     } else {
-      update.email = {
-          isBadInput: true,
-          badInputText: "Please enter a valid email address",
-        },
-      setRegistrationFormStatus(update);
+      (update.email = {
+        isBadInput: true,
+        badInputText: "Please enter a valid email address",
+      }),
+        setRegistrationFormStatus(update);
     }
   };
 
@@ -94,35 +114,101 @@ export default function RegistrationModal() {
     if (!pw || valid) {
       update.password = {
         ...update.password,
-        isBadInput: false
+        isBadInput: false,
       };
       setRegistrationFormStatus(update);
     } else {
       update.password = {
         ...update.password,
-        isBadInput: true
+        isBadInput: true,
       };
       setRegistrationFormStatus(update);
     }
   };
 
-
   const usernameValidator = (username: string) => {
     const valid = validateEmail(username);
-    const update = {...registrationFormStatus};
+    const update = { ...registrationFormStatus };
     if (!username || !valid) {
       update.username = {
         ...update.username,
-        isBadInput: false
+        isBadInput: false,
       };
       setRegistrationFormStatus(update);
     } else {
       update.username = {
         badInputText: "Your username can't be an email!",
-        isBadInput: true
+        isBadInput: true,
       };
       setRegistrationFormStatus(update);
     }
+  };
+
+  const validatePayload = (): boolean => {
+    let valid = true;
+    const newStatus = { ...registrationFormStatus };
+    for (const field in registrationPayload) {
+      if (registrationPayload[field as keyof RegistrationPayload]) continue;
+      if (field === "password") {
+        newStatus.password = {
+          ...newStatus.password,
+          isBadInput: true,
+        };
+      } else {
+        newStatus[field as keyof RegistrationPayload] = {
+          badInputText: `Please enter ${
+            field === "email" ? "an" : "a"
+          } ${field}`,
+          isBadInput: true,
+        } as FormStatus & PasswordFormStatus;
+      }
+      valid = false;
+    }
+    if (!valid) setRegistrationFormStatus(newStatus);
+    return valid;
+  };
+
+  const submitButtonHandler = () => {
+    if (!validatePayload()) return 
+    setLoading(true);
+
+    const sendPayload = async () => {
+      try {
+        const res = await authServer.post("/register", registrationPayload);
+        const data = res.data as RegistrationAPIResponse;
+
+        if (data.success) {
+          dispatch(setAccessToken(data.token));
+          dispatch(setRefreshToken(data.refresh));
+          dispatch(setPreviousModalHeight(modalHeight));
+          dispatch(setDisplayedModal("regSuccess"));
+          return;
+        }
+
+        const field = data.alreadyExists as keyof RegistrationFormStatus;
+        const update = { ...registrationFormStatus };
+        update[field] = {
+          badInputText: `An account with that ${field} already exists!`,
+          isBadInput: true,
+        } as FormStatus & PasswordFormStatus;
+        
+        setRegistrationFormStatus(update);
+
+      } catch (err: any) {
+        if (err.response) {
+          if (err.response.status === 400) {
+            console.log(err.response.data.message);
+          } else {
+            console.log(err.response.data);
+          }
+        }
+        setRegistrationFormStatus(defaultFormStatus);
+        dispatch(overlayErrorModal(true));
+      }
+    };
+
+    sendPayload();
+    setLoading(false);
   };
 
   return (
@@ -179,9 +265,13 @@ export default function RegistrationModal() {
                 },
                 styles.signUpButton,
               ]}
-              onPress={() => {}}
+              onPress={submitButtonHandler}
             >
-              <Text style={styles.buttonText}>Sign Up</Text>
+              {!isLoading ? (
+                <Text style={styles.buttonText}>Sign Up</Text>
+              ) : (
+                <ActivityIndicator size="large" color="black" />
+              )}
             </Pressable>
             <ThonburiLight style={{ fontSize: 14 }}>
               I already have an account.{" "}

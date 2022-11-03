@@ -79,6 +79,9 @@ export default function AuthFormTextInputBox(props: AuthFormTextInputBoxProps) {
             }
           }}
           onBlur={() => {
+            if (!status.isBadInput) {
+              setActiveBoxStyle(styles.inputBox);
+            }
             props.validator?.(value)
           }}
         />
@@ -87,6 +90,7 @@ export default function AuthFormTextInputBox(props: AuthFormTextInputBoxProps) {
             style={styles.closeButtonParent}
             onPress={() => {
               setValue("")
+              props.onChange("")
               props.validator?.("")
             }}
           >

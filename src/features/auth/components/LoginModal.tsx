@@ -1,49 +1,60 @@
-import { Animated, StyleSheet, Text, Pressable } from "react-native";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import Colors from "../../../common/constants/Colors";
 import Layout from "../../../common/constants/Layout";
 import GrowingBottomTray from "../../../common/components/GrowingBottomTray";
 import {
+  disableAuthNavigator,
+  overlayErrorModal,
   selectPreviousModalHeight,
+  setAccessToken,
   setDisplayedModal,
   setPreviousModalHeight,
+  setRefreshToken,
 } from "../authSlice";
 import {
   ThonburiBold,
   ThonburiLight,
 } from "../../../common/components/StyledText";
 import AuthFormTextInputBox from "./AuthFormInputBox";
-import { LoginFormStatus, LoginPayload } from "../types";
-import validateEmail from "../../../common/util/validateEmail";
+import {
+  FormStatus,
+  LoginAPIResponse,
+  LoginFormStatus,
+  LoginPayload,
+  PasswordFormStatus,
+} from "../types";
+import authServer from "../requests";
+
+const defaultFormStatus = {
+  id: {
+    badInputText: "",
+    isBadInput: false,
+  },
+  password: {
+    criteria: ["Invalid Password"],
+    isBadInput: false,
+  },
+};
 
 export default function LoginModal() {
   const [showForm, setShowForm] = useState<Boolean>(false);
-  const [loginPayload, setLoginPayload] =
-  useState<LoginPayload>({
-    Id: null,
-    type: "username",
+  const [loginPayload, setLoginPayload] = useState<LoginPayload>({
+    id: null,
     password: null,
-    device: null
-});
-const [loginFormStatus, setLoginFormStatus] =
-  useState<LoginFormStatus>({
-    Id: {
-      badInputText: "",
-      isBadInput: false,
-    },
-    password: {
-      criteria: [
-        "Minimum 8 characters",
-        "At least one uppercase character",
-        "At least one lowercase character",
-        "At least one number",
-      ],
-      isBadInput: false,
-    },
   });
+  const [loginFormStatus, setLoginFormStatus] =
+    useState<LoginFormStatus>(defaultFormStatus);
+  const [isLoading, setLoading] = useState<boolean>(false);
 
   const fade = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch();
@@ -59,12 +70,83 @@ const [loginFormStatus, setLoginFormStatus] =
     }).start();
   };
 
-  const handleFormInput = (text: string, field: "Id" | "password") => {
+  const handleFormInput = (text: string, field: "id" | "password") => {
     const update: LoginPayload = { ...loginPayload };
     update[field] = text;
+    if (!text) {
+      const newStatus = {...loginFormStatus};
+      newStatus[field] = {
+        ...newStatus[field],
+        isBadInput: false
+      } as PasswordFormStatus & FormStatus
+      setLoginFormStatus(newStatus)
+    }
     setLoginPayload(update);
   };
-  
+
+  const validatePayload = (): boolean => {
+    let valid = true;
+    const newStatus = { ...loginFormStatus };
+
+    for (const field in loginPayload) {
+      if (loginPayload[field as keyof LoginPayload]) continue;
+
+      if (field === "password") {
+        newStatus.password = {
+          ...newStatus.password,
+          isBadInput: true,
+        };
+      } else {
+        newStatus[field as keyof LoginPayload] = {
+          badInputText: `Enter your ${
+            field === "password" ? "password" : "email or username"
+          }.`,
+          isBadInput: true,
+        } as PasswordFormStatus & FormStatus;
+      }
+      valid = false;
+    }
+
+    if (!valid) setLoginFormStatus(newStatus);
+    return valid;
+  };
+
+  const submittButtonHandler = () => {
+    if (!validatePayload()) return;
+    setLoading(true);
+
+    const sendPayload = async () => {
+      try {
+        const res = await authServer.post("/login", loginPayload);
+        const data = res.data as LoginAPIResponse;
+        console.log(data);
+        if (data.success) {
+          dispatch(setAccessToken(data.access));
+          dispatch(setRefreshToken(data.refresh));
+          dispatch(setPreviousModalHeight(modalHeight));
+          dispatch(disableAuthNavigator());
+          return;
+        }
+
+        const field = data.badField as keyof LoginFormStatus;
+        const update = { ...loginFormStatus };
+        update[field] = {
+          badInputText: data.message,
+          isBadInput: true,
+        } as PasswordFormStatus & FormStatus;
+
+        setLoginFormStatus(update);
+      } catch (e) {
+        console.log(e);
+        setLoginFormStatus(defaultFormStatus);
+        dispatch(overlayErrorModal(true));
+      }
+    };
+
+    sendPayload();
+    setLoading(false);
+  };
+
   return (
     <GrowingBottomTray
       duration={100}
@@ -82,17 +164,21 @@ const [loginFormStatus, setLoginFormStatus] =
             <ThonburiBold style={styles.topText}>Sign In</ThonburiBold>
             <AuthFormTextInputBox
               topText={"Username or Email Address"}
-              status={loginFormStatus.Id}
+              status={loginFormStatus.id}
               isPassword={false}
               isEmail={true}
-              onChange={(text)=> {handleFormInput(text,"Id")}}
+              onChange={(text) => {
+                handleFormInput(text, "id");
+              }}
             />
             <AuthFormTextInputBox
               topText={"Password"}
               status={loginFormStatus.password}
               isPassword={true}
               isEmail={false}
-              onChange={(text)=> {handleFormInput(text,"password")}}
+              onChange={(text) => {
+                handleFormInput(text, "password");
+              }}
             />
             <Pressable
               style={({ pressed }) => [
@@ -103,9 +189,13 @@ const [loginFormStatus, setLoginFormStatus] =
                 },
                 styles.signUpButton,
               ]}
-              onPress={() => {}}
+              onPress={submittButtonHandler}
             >
-              <Text style={styles.buttonText}>Sign In</Text>
+              {!isLoading ? (
+                <Text style={styles.buttonText}>Sign In</Text>
+              ) : (
+                <ActivityIndicator size="large" color="black" />
+              )}
             </Pressable>
             <ThonburiLight style={{ fontSize: 14 }}>
               I'm a new member.{" "}
