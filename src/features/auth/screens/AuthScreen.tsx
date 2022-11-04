@@ -6,6 +6,7 @@ import {
   Text,
   Keyboard,
   TouchableWithoutFeedback,
+  Modal,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import React, { useEffect, useRef, useState } from "react";
@@ -15,6 +16,7 @@ import LevelUpIcon from "../../../../assets/noun-level-up.svg";
 import useLocalTokens from "../../../common/hooks/useLocalUserData";
 import {
   disableAuthNavigator,
+  renderErrorModal,
   selectActiveModal,
   setDisplayedModal,
 } from "../authSlice";
@@ -22,6 +24,7 @@ import ActivityIndicatorLoader from "../../../common/components/ActivityIndicato
 import SignInPicker from "../components/SignInPicker";
 import RegistrationModal from "../components/RegistrationModal";
 import LoginModal from "../components/LoginModal";
+import ErrorOverlay from "../components/ErrorOverlay";
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
@@ -30,10 +33,12 @@ export default function AuthScreen() {
 
   const dispatch = useDispatch();
   const activeModal = useSelector(selectActiveModal);
-
+  const showErrorOverlay = useSelector(renderErrorModal);
   const lastUserTokens = useLocalTokens();
+
   useEffect(() => {
     if (isAnimationComplete) {
+      console.log(lastUserTokens)
       if (!lastUserTokens.access || !lastUserTokens.refresh) {
         dispatch(setDisplayedModal("picker"));
       } else {
@@ -68,6 +73,14 @@ export default function AuthScreen() {
             startAnimations();
           }}
         >
+          {showErrorOverlay && (
+            <Modal 
+              transparent={true}
+              animationType="fade"
+            >
+              <ErrorOverlay />
+            </Modal>
+          )}
           <Animated.View style={{ ...styles.logoContainer, opacity: fadeLogo }}>
             <Text style={styles.logoText}>DayQuest</Text>
             <View style={styles.sloganBox}>

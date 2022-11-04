@@ -33,7 +33,8 @@ import {
   LoginPayload,
   PasswordFormStatus,
 } from "../types";
-import authServer from "../requests";
+import authServer from "../authServer";
+import { persistAccessToken, persistRefreshToken } from "../tokenPersisters";
 
 const defaultFormStatus = {
   id: {
@@ -60,6 +61,7 @@ export default function LoginModal() {
   const dispatch = useDispatch();
   const modalHeight = Math.round(Layout.window.height * 0.6);
   const lastModalHeight = useSelector(selectPreviousModalHeight);
+
 
   const triggerFormRender = () => {
     setShowForm(true);
@@ -119,10 +121,10 @@ export default function LoginModal() {
       try {
         const res = await authServer.post("/login", loginPayload);
         const data = res.data as LoginAPIResponse;
-        console.log(data);
+        console.log(data)
         if (data.success) {
-          dispatch(setAccessToken(data.access));
-          dispatch(setRefreshToken(data.refresh));
+          dispatch(setAccessToken(persistAccessToken(data.access)));
+          dispatch(setRefreshToken(persistRefreshToken(data.refresh)));
           dispatch(setPreviousModalHeight(modalHeight));
           dispatch(disableAuthNavigator());
           return;
@@ -130,10 +132,18 @@ export default function LoginModal() {
 
         const field = data.badField as keyof LoginFormStatus;
         const update = { ...loginFormStatus };
-        update[field] = {
-          badInputText: data.message,
-          isBadInput: true,
-        } as PasswordFormStatus & FormStatus;
+        if (field === "password") {
+          update.password = {
+            ...update.password,
+            isBadInput: true,
+          }
+        } else {
+          update[field] = {
+            badInputText: data.message,
+            isBadInput: true,
+        }
+      }
+        
 
         setLoginFormStatus(update);
       } catch (e) {

@@ -33,8 +33,9 @@ import {
   FormStatus,
   RegistrationAPIResponse,
 } from "../types";
-import authServer from "../requests";
-import { View } from "../../../common/components/Themed";
+import authServer from "../authServer";
+import RegistrationSuccess from "./RegistrationSuccess";
+import { persistAccessToken, persistRefreshToken } from "../tokenPersisters";
 
 const defaultFormStatus: RegistrationFormStatus = {
   email: {
@@ -57,7 +58,8 @@ const defaultFormStatus: RegistrationFormStatus = {
 };
 
 export default function RegistrationModal() {
-  const [showForm, setShowForm] = useState<Boolean>(false);
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [showSuccess, setSuccess] = useState<boolean>(false)
   const [registrationPayload, setRegistrationPayload] =
     useState<RegistrationPayload>({
       email: null,
@@ -178,10 +180,10 @@ export default function RegistrationModal() {
         const data = res.data as RegistrationAPIResponse;
 
         if (data.success) {
-          dispatch(setAccessToken(data.token));
-          dispatch(setRefreshToken(data.refresh));
+          dispatch(setAccessToken(persistAccessToken(data.token)));
+          dispatch(setRefreshToken(persistRefreshToken(data.refresh)));
           dispatch(setPreviousModalHeight(modalHeight));
-          dispatch(setDisplayedModal("regSuccess"));
+          setSuccess(true)
           return;
         }
 
@@ -218,7 +220,8 @@ export default function RegistrationModal() {
       to={modalHeight}
       onAnimationFinish={triggerFormRender}
     >
-      {showForm && (
+      {showSuccess && <RegistrationSuccess/>}
+      {showForm && !showSuccess && (
         <KeyboardAwareScrollView
           scrollEnabled={true}
           resetScrollToCoords={{ x: 0, y: 0 }}

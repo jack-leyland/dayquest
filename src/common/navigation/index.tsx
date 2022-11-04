@@ -23,6 +23,7 @@ import {
   RootTabScreenProps,
 } from "../../app/types";
 import AuthScreen from "../../features/auth/screens/AuthScreen";
+import HomeScreen from "../../features/home/screens/HomeScreen";
 
 export default function Navigation({
   colorScheme,
@@ -58,9 +59,9 @@ function RootNavigator() {
         />) : (
           <>
         <Stack.Screen
-          name="Auth"
-          component={AuthScreen}
-          options={{ headerShown: true }}
+          name="Home"
+          component={HomeScreen}
+          options={{ headerShown: false }}
         />
           </>
         )
