@@ -206,11 +206,11 @@ export default function RegistrationModal() {
         }
         setRegistrationFormStatus(defaultFormStatus);
         dispatch(overlayErrorModal(true));
+      } finally {
+        setLoading(false);
       }
     };
-
     sendPayload();
-    setLoading(false);
   };
 
   return (

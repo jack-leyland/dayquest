@@ -10,7 +10,7 @@ import {
     ColorValue,
   } from "react-native";
 
-interface LoaderProps {
+export interface LoaderProps {
     text: String;
     textStyle: StyleProp<TextStyle> 
     viewStyle: any;

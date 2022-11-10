@@ -62,7 +62,6 @@ export default function LoginModal() {
   const modalHeight = Math.round(Layout.window.height * 0.6);
   const lastModalHeight = useSelector(selectPreviousModalHeight);
 
-
   const triggerFormRender = () => {
     setShowForm(true);
     Animated.timing(fade, {
@@ -76,12 +75,12 @@ export default function LoginModal() {
     const update: LoginPayload = { ...loginPayload };
     update[field] = text;
     if (!text) {
-      const newStatus = {...loginFormStatus};
+      const newStatus = { ...loginFormStatus };
       newStatus[field] = {
         ...newStatus[field],
-        isBadInput: false
-      } as PasswordFormStatus & FormStatus
-      setLoginFormStatus(newStatus)
+        isBadInput: false,
+      } as PasswordFormStatus & FormStatus;
+      setLoginFormStatus(newStatus);
     }
     setLoginPayload(update);
   };
@@ -121,7 +120,6 @@ export default function LoginModal() {
       try {
         const res = await authServer.post("/login", loginPayload);
         const data = res.data as LoginAPIResponse;
-        console.log(data)
         if (data.success) {
           dispatch(setAccessToken(persistAccessToken(data.access)));
           dispatch(setRefreshToken(persistRefreshToken(data.refresh)));
@@ -136,25 +134,25 @@ export default function LoginModal() {
           update.password = {
             ...update.password,
             isBadInput: true,
-          }
+          };
         } else {
           update[field] = {
             badInputText: data.message,
             isBadInput: true,
+          };
         }
-      }
-        
-
         setLoginFormStatus(update);
       } catch (e) {
         console.log(e);
         setLoginFormStatus(defaultFormStatus);
         dispatch(overlayErrorModal(true));
+      } finally {
+        setLoading(false);
       }
     };
 
     sendPayload();
-    setLoading(false);
+    
   };
 
   return (

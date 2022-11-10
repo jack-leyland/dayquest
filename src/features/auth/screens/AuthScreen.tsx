@@ -38,7 +38,6 @@ export default function AuthScreen() {
 
   useEffect(() => {
     if (isAnimationComplete) {
-      console.log(lastUserTokens)
       if (!lastUserTokens.access || !lastUserTokens.refresh) {
         dispatch(setDisplayedModal("picker"));
       } else {

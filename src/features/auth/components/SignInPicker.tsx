@@ -18,12 +18,12 @@ export default function SignInPicker() {
   const lastModalHeight = useSelector(selectPreviousModalHeight);
 
   const triggerButtonRender = () => {
-    setShowButtons(true);
     Animated.timing(fade, {
       duration: 200,
       toValue: 1,
       useNativeDriver: true,
     }).start();
+    setShowButtons(true);
   };
 
   return (

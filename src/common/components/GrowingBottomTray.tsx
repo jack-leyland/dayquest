@@ -2,7 +2,7 @@ import { AnimatedModalView as AnimatedThemedView } from "./Themed";
 import { Animated, StyleSheet, Text } from "react-native";
 import { useEffect, useRef } from "react";
 
-interface GrowingBottomTrayProps {
+export interface GrowingBottomTrayProps {
   duration: number;
   from: number;
   to: number;
