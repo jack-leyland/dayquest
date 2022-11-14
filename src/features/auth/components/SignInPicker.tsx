@@ -9,6 +9,7 @@ import {
   setDisplayedModal,
   setPreviousModalHeight,
 } from "../authSlice";
+import useColorScheme from "../../../common/hooks/useColorScheme";
 
 export default function SignInPicker() {
   const [showButtons, setShowButtons] = useState(false);
@@ -16,6 +17,7 @@ export default function SignInPicker() {
   const dispatch = useDispatch();
   const modalHeight = Math.round(Layout.window.height / 2);
   const lastModalHeight = useSelector(selectPreviousModalHeight);
+  const theme = useColorScheme()
 
   const triggerButtonRender = () => {
     Animated.timing(fade, {
@@ -61,7 +63,7 @@ export default function SignInPicker() {
               dispatch(setPreviousModalHeight(modalHeight));
             }}
           >
-            <Text style={{ ...styles.text, color: "white" }}>Sign In</Text>
+            <Text style={{ ...styles.text, color: theme === "dark" ? "white" : Colors.common.lightYellow }}>Sign In</Text>
           </Pressable>
         </Animated.View>
       )}
@@ -78,7 +80,6 @@ const styles = StyleSheet.create({
     borderColor: "white",
   },
   text: {
-    color: "black",
     fontFamily: "thonburi-bold",
     fontSize: 20,
   },

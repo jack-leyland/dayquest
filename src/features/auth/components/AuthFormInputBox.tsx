@@ -38,7 +38,6 @@ export default function AuthFormTextInputBox(props: AuthFormTextInputBoxProps) {
   const [hidePass, setHidePass] = useState<boolean>(props.isPassword);
   const [status, setStatus] = useState<AuthFormTextInputBoxProps["status"]>(props.status)
   
-  
   useEffect(() => {
   
     if (props.status.isBadInput) {
@@ -59,7 +58,7 @@ export default function AuthFormTextInputBox(props: AuthFormTextInputBoxProps) {
       <ThonburiLight style={[styles.topText, { color: textColor }]}>
         {props.topText}
       </ThonburiLight>
-      <View style={activeBoxStyle}>
+      <View style={[activeBoxStyle, theme === "light" ? {borderWidth: 2, borderColor:Colors.light.grey} : {}]}>
         <TextInput
           onChangeText={(text) => {
             setValue(text);
