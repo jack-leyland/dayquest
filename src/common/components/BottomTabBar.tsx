@@ -9,9 +9,7 @@ import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import Colors from "../constants/Colors";
 import { ThonburiLight } from "./StyledText";
 import NavigationIcon from "../navigation/NavigationIcon";
-import Layout from "../constants/Layout";
 import React from "react";
-import { ParamListBase } from "@react-navigation/native";
 
 const BottomTabBar = ({
   state,

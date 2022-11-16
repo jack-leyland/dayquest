@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   inputBoxFocus: {
     borderWidth: 2,
-    borderColor: Colors.common.lightYellow,
+    borderColor: Colors.common.brightYellow,
   },
   badTextContainer: {
     width: "100%",

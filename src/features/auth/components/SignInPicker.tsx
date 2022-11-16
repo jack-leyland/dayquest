@@ -40,7 +40,7 @@ export default function SignInPicker() {
           <Pressable
             style={({ pressed }) => [
               {
-                backgroundColor: pressed ? "white" : Colors.common.lightYellow,
+                backgroundColor: pressed ? "white" : Colors.common.brightYellow,
               },
               styles.signUpButton,
             ]}
@@ -54,7 +54,7 @@ export default function SignInPicker() {
           <Pressable
             style={({ pressed }) => [
               {
-                borderColor: pressed ? "white" : Colors.common.lightYellow,
+                borderColor: pressed ? "white" : Colors.common.brightYellow,
               },
               styles.signInButton,
             ]}
@@ -63,7 +63,7 @@ export default function SignInPicker() {
               dispatch(setPreviousModalHeight(modalHeight));
             }}
           >
-            <Text style={{ ...styles.text, color: theme === "dark" ? "white" : Colors.common.lightYellow }}>Sign In</Text>
+            <Text style={{ ...styles.text, color: theme === "dark" ? "white" : Colors.common.brightYellow }}>Sign In</Text>
           </Pressable>
         </Animated.View>
       )}

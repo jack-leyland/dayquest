@@ -41,6 +41,7 @@ export default function AuthScreen() {
       if (!lastUserTokens.access || !lastUserTokens.refresh) {
         dispatch(setDisplayedModal("picker"));
       } else {
+        
         dispatch(disableAuthNavigator());
       }
     }
