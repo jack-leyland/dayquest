@@ -58,7 +58,7 @@ export default function AuthFormTextInputBox(props: AuthFormTextInputBoxProps) {
       <ThonburiLight style={[styles.topText, { color: textColor }]}>
         {props.topText}
       </ThonburiLight>
-      <View style={[activeBoxStyle, theme === "light" ? {borderWidth: 2, borderColor:Colors.light.grey} : {}]}>
+      <View style={[activeBoxStyle, theme === "light" ? {shadowColor: "black", shadowOffset:{height:2, width:0}, shadowRadius:4, shadowOpacity: 0.1} : {}]}>
         <TextInput
           onChangeText={(text) => {
             setValue(text);
