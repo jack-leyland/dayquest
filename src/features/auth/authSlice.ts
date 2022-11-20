@@ -3,12 +3,13 @@ import { RootState } from "../../app/store";
 
 export interface AuthState {
   authFlowActive: Boolean;
-  modalToRender: "loader" | "login" | "register" | "picker" ;
-  overlayErrorModal: boolean,
+  modalToRender: "loader" | "login" | "register" | "picker";
+  overlayErrorModal: boolean;
   accessToken: string | null;
   refreshToken: string | null;
+  activeUserId: string | null;
   previousModalHeight: number;
-  overlayErrorMessage: string | null
+  overlayErrorMessage: string | null;
 }
 
 const initialState: AuthState = {
@@ -17,27 +18,26 @@ const initialState: AuthState = {
   overlayErrorModal: false,
   accessToken: null,
   refreshToken: null,
+  activeUserId: null,
   previousModalHeight: 0,
-  overlayErrorMessage: "This usually happens when there's a problem with our servers, or you are not connected to the internet.\n\nPlease try again a little bit later!"
+  overlayErrorMessage:
+    "This usually happens when there's a problem with our servers, or you are not connected to the internet.\n\nPlease try again a little bit later!",
 };
 
 export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setAccessToken: (state, action: PayloadAction<AuthState["accessToken"]>) => {
-      state.accessToken = action.payload;
-    },
-    setRefreshToken: (state, action: PayloadAction<AuthState["refreshToken"]>) => {
-      state.refreshToken = action.payload;
-    },
     disableAuthNavigator: (state) => {
       state.authFlowActive = false;
     },
     enableAuthNavigator: (state) => {
       state.authFlowActive = true;
     },
-    overlayErrorModal: (state, action: PayloadAction<AuthState["overlayErrorModal"]>) => {
+    overlayErrorModal: (
+      state,
+      action: PayloadAction<AuthState["overlayErrorModal"]>
+    ) => {
       state.overlayErrorModal = action.payload;
     },
     setDisplayedModal: (
@@ -61,25 +61,23 @@ export const authSlice = createSlice({
   },
 });
 
-export const selectAccessToken = (state: RootState) => state.auth.accessToken;
-export const selectRefreshToken = (state: RootState) => state.auth.refreshToken;
-export const renderErrorModal = (state: RootState) => state.auth.overlayErrorModal;
+export const renderErrorModal = (state: RootState) =>
+  state.auth.overlayErrorModal;
 export const renderAuthNavigator = (state: RootState) =>
   state.auth.authFlowActive;
 export const selectActiveModal = (state: RootState) => state.auth.modalToRender;
 export const selectPreviousModalHeight = (state: RootState) =>
   state.auth.previousModalHeight;
-export const selectOverlayErrorMessage =  (state: RootState) => state.auth.overlayErrorMessage;
+export const selectOverlayErrorMessage = (state: RootState) =>
+  state.auth.overlayErrorMessage;
 
 export const {
-  setAccessToken,
-  setRefreshToken,
   disableAuthNavigator,
   enableAuthNavigator,
   setDisplayedModal,
   setPreviousModalHeight,
   overlayErrorModal,
-  setOverlayErrorMessage
+  setOverlayErrorMessage,
 } = authSlice.actions;
 
 export default authSlice.reducer;

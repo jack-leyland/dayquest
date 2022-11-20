@@ -3,8 +3,8 @@ import * as Font from 'expo-font';
 import { useEffect, useState } from 'react';
 
 
-export default function useCachedResources() {
-  const [isLoadingComplete, setLoadingComplete] = useState(false);
+export default function useCachedResources(): boolean {
+  const [isLoadingComplete, setLoadingComplete] = useState<boolean>(false);
  
   // Load any resources or data that we need prior to rendering the app
   useEffect(() => {

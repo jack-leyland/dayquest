@@ -8,6 +8,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import React, { useRef, useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import jwt from 'jwt-decode'
 
 import Colors from "../../../common/constants/Colors";
 import Layout from "../../../common/constants/Layout";
@@ -16,10 +17,8 @@ import {
   disableAuthNavigator,
   overlayErrorModal,
   selectPreviousModalHeight,
-  setAccessToken,
   setDisplayedModal,
   setPreviousModalHeight,
-  setRefreshToken,
 } from "../authSlice";
 import {
   ThonburiBold,
@@ -34,7 +33,11 @@ import {
   PasswordFormStatus,
 } from "../types";
 import authServer from "../authServer";
-import { persistAccessToken, persistRefreshToken } from "../tokenPersisters";
+import { persistAccessToken, persistRefreshToken, persistUserId } from "../persisters";
+import { setAccessToken, setActiveUser, setRefreshToken } from "../../../app/appSlice";
+import { JWT, User } from "../../../app/types";
+import { getUserRecord } from "../../../app/db";
+import useDeviceId from "../../../common/hooks/useDeviceId";
 
 const defaultFormStatus = {
   id: {
@@ -61,6 +64,7 @@ export default function LoginModal() {
   const dispatch = useDispatch();
   const modalHeight = Math.round(Layout.window.height * 0.6);
   const lastModalHeight = useSelector(selectPreviousModalHeight);
+  const deviceId = useDeviceId()
 
   const triggerFormRender = () => {
     setShowForm(true);
@@ -118,13 +122,18 @@ export default function LoginModal() {
 
     const sendPayload = async () => {
       try {
-        const res = await authServer.post("/login", loginPayload);
+        const res = await authServer.post("/login", loginPayload,{headers:{"device": deviceId}});
         const data = res.data as LoginAPIResponse;
         if (data.success) {
           dispatch(setAccessToken(persistAccessToken(data.access)));
           dispatch(setRefreshToken(persistRefreshToken(data.refresh)));
-          dispatch(setPreviousModalHeight(modalHeight));
-          dispatch(disableAuthNavigator());
+          const token: JWT = jwt(data.access as string)
+          getUserRecord(token.user.userId).then((user)=> {
+            dispatch(setActiveUser(persistUserId(user)))
+            dispatch(disableAuthNavigator());
+          }).catch((err) => {
+            console.log(err)
+          })
           return;
         }
 

@@ -2,8 +2,8 @@ import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 
 export default function useLocalTokens() {
-    const [accessToken, setAccessToken] = useState<String | null>(null);
-    const [refreshToken, setRefreshToken] = useState<String | null>(null);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [refreshToken, setRefreshToken] = useState<string | null>(null);
 
     useEffect(() => {
         async function getTokensFromKeychain() {

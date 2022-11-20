@@ -1,7 +1,7 @@
-import { View, StyleSheet, Text, Pressable } from "react-native";
+import { StyleSheet, Text, Pressable } from "react-native";
 import { BlurView } from "expo-blur";
 
-import { overlayErrorModal, renderErrorModal, selectOverlayErrorMessage } from "../authSlice";
+import { overlayErrorModal, selectOverlayErrorMessage } from "../authSlice";
 import {
   ModalView as ThemedModalView,
   View as ThemedView,
@@ -28,15 +28,27 @@ export default function ErrorOverlay() {
           <ThonburiRegular style={styles.bodyText}>{message}</ThonburiRegular>
         </ThemedModalView>
         <ThemedModalView style={styles.modalFooter}>
-          <Pressable style={({ pressed }) => [
+          <Pressable
+            style={({ pressed }) => [
               {
                 backgroundColor: pressed ? "white" : Colors.common.lightYellow,
               },
               styles.button,
             ]}
-            onPress={()=>{dispatch(overlayErrorModal(false))}}
+            onPress={() => {
+              dispatch(overlayErrorModal(false));
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontFamily: "thonburi-bold",
+                color: Colors.light.text,
+              }}
             >
-            <Text style={{fontSize: 18, fontFamily: "thonburi-bold", color: Colors.light.text}}> Dismiss</Text>
+              {" "}
+              Dismiss
+            </Text>
           </Pressable>
         </ThemedModalView>
       </ThemedModalView>
@@ -50,7 +62,6 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 10
   },
   topContainer: {
     width: "100%",

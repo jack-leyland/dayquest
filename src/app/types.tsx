@@ -1,37 +1,19 @@
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
+export type User = {
+    userId: string,
+    username: string,
+    email: string, 
+    deviceId: string, 
+    isOfflineUser: boolean,
+    level: number,
+    exp: number 
 }
 
-export type RootStackParamList = {
-  Auth: undefined;
-  NotFound: undefined;
-};
-export type BottomTabParamList = {
-  Home: undefined;
-  Quests: undefined;
-  Calendar: undefined;
-  Record: undefined;
-  Stats: undefined;
-};
-
-export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<
-  RootStackParamList,
-  Screen
->;
-
-export type RootTabParamList = {
-  TabOne: undefined;
-  TabTwo: undefined;
-};
-
-
-export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<
-  BottomTabScreenProps<RootTabParamList, Screen>,
-  NativeStackScreenProps<RootStackParamList>
->;
+export type JWT = {
+    exp: number,
+    iat: number
+    user: {
+        userId: string,
+        username: string,
+    }
+    
+}

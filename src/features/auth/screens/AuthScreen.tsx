@@ -11,9 +11,14 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import React, { useEffect, useRef, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
+import {
+  fetch as fetchNetInfo,
+  NetInfoState,
+} from "@react-native-community/netinfo";
+import jwt from "jwt-decode";
 
 import LevelUpIcon from "../../../../assets/noun-level-up.svg";
-import useLocalTokens from "../../../common/hooks/useLocalUserData";
+import useLocalTokens from "../../../common/hooks/useLocalTokens";
 import {
   disableAuthNavigator,
   renderErrorModal,
@@ -25,27 +30,94 @@ import SignInPicker from "../components/SignInPicker";
 import RegistrationModal from "../components/RegistrationModal";
 import LoginModal from "../components/LoginModal";
 import ErrorOverlay from "../components/ErrorOverlay";
+import {
+  setAccessToken,
+  setActiveUser,
+  setOfflineMode,
+  setRefreshToken,
+} from "../../../app/appSlice";
+import useLastUserId from "../../../common/hooks/useLastUserId";
+import { getUserRecord } from "../../../app/db";
+import { JWT, User } from "../../../app/types";
+
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
   const fadeLoader = useRef(new Animated.Value(0)).current;
-  const [isAnimationComplete, setAnimationComplete] = useState(false);
+  const [isAnimationComplete, setAnimationComplete] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
 
   const dispatch = useDispatch();
   const activeModal = useSelector(selectActiveModal);
   const showErrorOverlay = useSelector(renderErrorModal);
+  const lastUserId = useLastUserId();
   const lastUserTokens = useLocalTokens();
 
+  // When animation finishes, check if who the most recently logged in user was an
+  // fetch their record from the DB.
   useEffect(() => {
     if (isAnimationComplete) {
-      if (!lastUserTokens.access || !lastUserTokens.refresh) {
+      if (!lastUserId) {
         dispatch(setDisplayedModal("picker"));
-      } 
-      else {
-        dispatch(disableAuthNavigator());
+      } else {
+        // Set up and verify active user state
+        //bail out early if offline user
+        const fetchUserFromDb = async () => {
+          try {
+            const user = await getUserRecord(lastUserId);
+            setUser(user);
+          } catch (err) {
+            console.log(err);
+            //This means an SQL error. Send back to login screen.
+            dispatch(setDisplayedModal("picker"));
+          }
+        };
+        fetchUserFromDb();
       }
     }
   }, [isAnimationComplete]);
+
+  // When the user record is loaded, check for offline mode,
+  // check that the stored tokens belong to the same user and then update appState and route accordingly.
+  useEffect(() => {
+    if (user) {
+      dispatch(setActiveUser(user));
+      if (user.isOfflineUser) {
+        dispatch(disableAuthNavigator());
+      } else {
+        //If for whatever reason there aren't tokens in the keychain
+        if (!lastUserTokens.access || !lastUserTokens.refresh) {
+          dispatch(setDisplayedModal("picker"));
+        } else {
+          handleAppInitialization(user);
+        }
+      }
+    }
+  }, [user]);
+
+  const handleAppInitialization = async (user: User) => {
+    try {
+      const connectionState: NetInfoState = await fetchNetInfo();
+      if (!connectionState.isConnected) {
+        //TODO: Modal Notifying user about what happends when you're offline? 
+        dispatch(setOfflineMode(true));
+        dispatch(disableAuthNavigator())
+      } else if (connectionState.isConnected) {
+        const access: JWT = jwt(lastUserTokens.access as string);
+        const refresh: JWT = jwt(lastUserTokens.refresh as string);
+        if (access.user.userId != lastUserId || refresh.user.userId != lastUserId) {
+          dispatch(setDisplayedModal("picker"))
+        } else {
+          dispatch(setAccessToken(lastUserTokens.access))
+          dispatch(setRefreshToken(lastUserTokens.refresh))
+          dispatch(setActiveUser(user))
+          dispatch(disableAuthNavigator())
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const startAnimations = () => {
     Animated.timing(fadeLogo, {
@@ -74,10 +146,7 @@ export default function AuthScreen() {
           }}
         >
           {showErrorOverlay && (
-            <Modal 
-              transparent={true}
-              animationType="fade"
-            >
+            <Modal transparent={true} animationType="fade">
               <ErrorOverlay />
             </Modal>
           )}

@@ -1,94 +1,147 @@
 import * as SQLite from "expo-sqlite";
+import { SQLResultSet } from "expo-sqlite";
+import { User } from "./types";
 
 export const openDB = (): SQLite.WebSQLDatabase => {
   const db = SQLite.openDatabase("dayquest.db");
   return db;
 };
 
+export const getUserRecord = (userId: string): Promise<User> => {
+  const db = openDB();
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          "SELECT * FROM users WHERE userId=?",
+          [userId],
+          (_, { rows: { _array } }) => {
+            resolve(_array[0] as User);
+          }
+        );
+      },
+      (err) => {
+        reject(err);
+      }
+    );
+  });
+};
+
+export const saveNewUserRecord = (user: User): Promise<User> => {
+  const db = openDB();
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          "INSERT INTO users VALUES (?,?,?,?,?,?,?)",
+          [
+            user.userId,
+            user.username,
+            user.email,
+            user.deviceId,
+            user.isOfflineUser ? 1 : 0,
+            user.level,
+            user.exp,
+          ],
+          () => {
+            resolve(user);
+          }
+        );
+      },
+      (err) => {
+        reject(err);
+      }
+    );
+  });
+};
 
 export const buildDatabase = (): void => {
   const db = openDB();
-  db.transaction((tx) => {
-    tx.executeSql(
-      `CREATE TABLE IF NOT EXISTS "quest_categories" (
-            "cat_id" INTEGER PRIMARY KEY,
+  db.transaction(
+    (tx) => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS "questCategories" (
+            "catId" INTEGER PRIMARY KEY,
             "name" TEXT UNIQUE NOT NULL,
             "desc" TEXT
         );`
-    );
-    tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "objective_types" (
-            "type_id" INTEGER PRIMARY KEY,
+      );
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS "objectiveTypes" (
+            "typeId" INTEGER PRIMARY KEY,
             "name" TEXT UNIQUE NOT NULL,
             "desc" TEXT
         );`
-    );
-    tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "level_exp_params" (
+      );
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS "levelExpParams" (
             "level" INTEGER PRIMARY KEY,
-            "exp_needed" INTEGER NOT NULL,
-            "exp_per_completion" INTEGER NOT NULL
+            "expNeeded" INTEGER NOT NULL,
+            "expPerCompletion" INTEGER NOT NULL
         );`
-    );
-    tx.executeSql(
+      );
+      tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "quests" (
-            "quest_id" INTEGER PRIMARY KEY,
-            "category_id" INTEGER NOT NULL,
+            "questId" INTEGER,
+            "userId" TEXT NOT NULL,
+            "categoryId" INTEGER NOT NULL,
             "active" INTEGER NOT NULL CHECK ("active" IN (0,1)),
-            "start_date_utc" TEXT NOT NULL,
-            "end_date_utc" TEXT NOT NULL,
-            "is_priority" INTEGER NOT NULL DEFAULT 0 CHECK ("is_priority" IN (0,1)),
-            FOREIGN KEY ("category_id") REFERENCES "quest_categories" ("cat_id")
+            "startDateUtc" TEXT NOT NULL,
+            "endDateUtc" TEXT NOT NULL,
+            "isPriority" INTEGER NOT NULL DEFAULT 0 CHECK ("isPriority" IN (0,1)),
+            FOREIGN KEY ("categoryId") REFERENCES "questCategories" ("catId")
+            PRIMARY KEY ("questId", "userId")
         );`
-    );
-    tx.executeSql(
+      );
+      tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "objectives" (
-            "id" INTEGER PRIMARY KEY,
-            "quest_id" INTEGER,
-            "type_id" INTEGER,
+            "id" INTEGER,
+            "questId" INTEGER NOT NULL,
+            "typeId" INTEGER NOT NULL,
+            "userId" TEXT NOT NULL,
             "name" TEXT NOT NULL,
             "desc" TEXT,
             "active" INTEGER NOT NULL,
-            "enforcement_active" INTEGER NOT NULL DEFAULT 0 CHECK ("enforcement_active" IN (0,1)),
-            "start_date_utc" TEXT NOT NULL,
-            "end_date_utc" TEXT NOT NULL,
-            "is_recurring" INTEGER NOT NULL CHECK ("is_recurring" IN (0,1)),
-            "has_time" INTEGER NOT NULL DEFAULT 0 CHECK ("has_time" IN (0,1)),
-            "has_location" INTEGER NOT NULL DEFAULT 0 CHECK ("has_location" IN (0,1)),
-            "time_range_start" TEXT,
-            "time_range_end" TEXT,
-            "recurrence_pattern" TEXT,
-            "completion_streak" INTEGER,
-            "miss_streak" INTEGER,
-            FOREIGN KEY ("quest_id") REFERENCES "quests" ("quest_id"),
-            FOREIGN KEY ("type_id") REFERENCES "objective_types" ("type_id")
+            "enforcementActive" INTEGER NOT NULL DEFAULT 0 CHECK ("enforcementActive" IN (0,1)),
+            "startDateUtc" TEXT NOT NULL,
+            "endDateUtc" TEXT NOT NULL,
+            "isRecurring" INTEGER NOT NULL CHECK ("isRecurring" IN (0,1)),
+            "hasTime" INTEGER NOT NULL DEFAULT 0 CHECK ("hasTime" IN (0,1)),
+            "hasLocation" INTEGER NOT NULL DEFAULT 0 CHECK ("hasLocation" IN (0,1)),
+            "timeRangeStart" TEXT,
+            "timeRangeEnd" TEXT,
+            "recurrencePattern" TEXT,
+            "completionStreak" INTEGER,
+            "missStreak" INTEGER,
+            FOREIGN KEY ("questId") REFERENCES "quests" ("questId"),
+            FOREIGN KEY ("typeId") REFERENCES "objectiveTypes" ("typeId")
+            PRIMARY KEY ("id", "userId")
         );`
-    );
-    tx.executeSql(
+      );
+      tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "events" (
-            "event_id" INTEGER PRIMARY KEY,
-            "objective_id" INTEGER NOT NULL,
-            "recorded_on" INTEGER NOT NULL,
-            "successful_completion" INTEGER NOT NULL,
-            "exp_change" INTEGER NOT NULL,
-            FOREIGN KEY ("objective_id") REFERENCES "objectives" ("id")
+            "eventId" INTEGER PRIMARY KEY,
+            "objectiveId" INTEGER NOT NULL,
+            "recordedOn" INTEGER NOT NULL,
+            "successfulCompletion" INTEGER NOT NULL,
+            "expChange" INTEGER NOT NULL,
+            FOREIGN KEY ("objectiveId") REFERENCES "objectives" ("id")
           );`
-    );
-    tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "user" (
-            "user_id" TEXT PRIMARY KEY,
+      );
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS "users" (
+            "userId" TEXT PRIMARY KEY,
             "username" TEXT NOT NULL,
             "email" TEXT NOT NULL,
             "device" TEXT NOT NULL,
-            "logged_in" INTEGER NOT NULL,
+            "isOfflineUser" INTEGER NOT NULL DEFAULT 0 CHECK ("isOfflineUser" IN (0,1)),
             "level" INTEGER NOT NULL DEFAULT 1,
-            "exp" INTEGER NOT NULL DEFAULT 0,
-            "last_open" TEXT
+            "exp" INTEGER NOT NULL DEFAULT 0
         );`
-    );
-  },
-  (err) => {
-    console.log(err)
-  }
+      );
+    },
+    (err) => {
+      console.log(err);
+    }
   );
 };

@@ -8,6 +8,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useRef, useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import jwt from "jwt-decode"
 
 import Colors from "../../../common/constants/Colors";
 import Layout from "../../../common/constants/Layout";
@@ -15,10 +16,8 @@ import GrowingBottomTray from "../../../common/components/GrowingBottomTray";
 import {
   overlayErrorModal,
   selectPreviousModalHeight,
-  setAccessToken,
   setDisplayedModal,
   setPreviousModalHeight,
-  setRefreshToken,
 } from "../authSlice";
 import {
   ThonburiBold,
@@ -35,7 +34,11 @@ import {
 } from "../types";
 import authServer from "../authServer";
 import RegistrationSuccess from "./RegistrationSuccess";
-import { persistAccessToken, persistRefreshToken } from "../tokenPersisters";
+import { persistAccessToken, persistRefreshToken, persistUserId } from "../persisters";
+import { setAccessToken, setActiveUser, setRefreshToken } from "../../../app/appSlice";
+import { JWT, User } from "../../../app/types";
+import useDeviceId from "../../../common/hooks/useDeviceId";
+import { saveNewUserRecord } from "../../../app/db";
 
 const defaultFormStatus: RegistrationFormStatus = {
   email: {
@@ -75,6 +78,7 @@ export default function RegistrationModal() {
   const dispatch = useDispatch();
   const modalHeight = Math.round(Layout.window.height * 0.7);
   const lastModalHeight = useSelector(selectPreviousModalHeight);
+  const deviceId = useDeviceId()
 
   const triggerFormRender = () => {
     setShowForm(true);
@@ -176,14 +180,35 @@ export default function RegistrationModal() {
 
     const sendPayload = async () => {
       try {
-        const res = await authServer.post("/register", registrationPayload);
+        const res = await authServer.post("/register", registrationPayload, {headers:{"device": deviceId}});
         const data = res.data as RegistrationAPIResponse;
 
         if (data.success) {
           dispatch(setAccessToken(persistAccessToken(data.token)));
           dispatch(setRefreshToken(persistRefreshToken(data.refresh)));
           dispatch(setPreviousModalHeight(modalHeight));
-          setSuccess(true)
+
+          //save user record
+          const token: JWT = jwt(data.token as string)
+
+          const user: User = {
+            userId: token.user.userId,
+            username: registrationPayload.username as string,
+            email: registrationPayload.email as string,
+            deviceId: deviceId,
+            isOfflineUser: false,
+            level: 1,
+            exp: 0
+          }
+
+          saveNewUserRecord(user).then((user) => {
+            setActiveUser(persistUserId(user))
+            setSuccess(true)
+          }).catch((err) => {
+            console.log(err)
+          })
+
+          
           return;
         }
 
