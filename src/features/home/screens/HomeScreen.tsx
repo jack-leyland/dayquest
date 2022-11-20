@@ -1,11 +1,18 @@
+import { View, StyleSheet } from "react-native"
+import MainScreenLayout from "../../../common/components/MainScreenLayout"
 import {View as ThemedView} from "../../../common/components/Themed"
 import {Text} from "../../../common/components/Themed"
+import FlavorText from "../components/FlavorText"
+
 export default function HomeScreen() {
     return(
-        <ThemedView style={{height:"100%", width: "100%", justifyContent: "center", alignItems:"center"}}>
-            <Text>
-                HOME SCREEN
-            </Text>
-        </ThemedView>
+        <MainScreenLayout>
+            <FlavorText lastFiveScores={null}/>
+        </MainScreenLayout>
     )
 }
+
+const styles = StyleSheet.create({
+    
+})
+

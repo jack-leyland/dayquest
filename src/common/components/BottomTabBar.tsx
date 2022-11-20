@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
     bottom: 25,
     backgroundColor: Colors.dark.darkerBackground,
     borderRadius: 100,
+    marginHorizontal:5
   },
   mainItemContainer: {
     flex: 1,

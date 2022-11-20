@@ -31,10 +31,11 @@ function App() {
   } else {
     return (
       <SafeAreaProvider>
+        <StatusBar/>
         <Provider store={store}>
           <Navigation colorScheme={colorScheme} />
         </Provider>
-        <StatusBar style={colorScheme}/>
+    
       </SafeAreaProvider>
     );
   }

@@ -9,7 +9,7 @@ export default {
     tint: tintColorLight,
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorLight,
-    grey: "#E0E0E0"
+    statusBar: "#E0E0E0"
   },
   dark: {
     text: '#fff',
@@ -19,6 +19,7 @@ export default {
     tint: tintColorDark,
     tabIconDefault: '#ccc',
     tabIconSelected: tintColorDark,
+    statusBar: "#000"
   },
   common: {
     lightYellow: "#FFC563",
