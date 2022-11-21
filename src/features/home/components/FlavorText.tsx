@@ -24,6 +24,6 @@ const pickText = (scores: FlavourTextProps["lastFiveScores"]): string => {
 export default function FlavorText({lastFiveScores}:FlavourTextProps){
     const text = pickText(lastFiveScores)
     return (
-        <ThonburiBold style={{fontSize: 30}}>{text}</ThonburiBold>
+        <ThonburiBold style={{fontSize: 30, marginBottom: 20}}>{text}</ThonburiBold>
     )
 }

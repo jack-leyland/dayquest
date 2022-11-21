@@ -24,6 +24,7 @@ export default {
   common: {
     lightYellow: "#FFC563",
     red: '#f44336',
-    brightYellow: "#FFAA27"
+    brightYellow: "#FFAA27",
+    richGreen:"#00E676"
   }
 };

@@ -1,5 +1,4 @@
 import * as SQLite from "expo-sqlite";
-import { SQLResultSet } from "expo-sqlite";
 import { User } from "./types";
 
 export const openDB = (): SQLite.WebSQLDatabase => {
@@ -59,6 +58,9 @@ export const buildDatabase = (): void => {
   const db = openDB();
   db.transaction(
     (tx) => {
+      // tx.executeSql(
+      //   `DROP TABLE IF EXISTS expHistory`
+      // );
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "questCategories" (
             "catId" INTEGER PRIMARY KEY,
@@ -90,6 +92,7 @@ export const buildDatabase = (): void => {
             "endDateUtc" TEXT NOT NULL,
             "isPriority" INTEGER NOT NULL DEFAULT 0 CHECK ("isPriority" IN (0,1)),
             FOREIGN KEY ("categoryId") REFERENCES "questCategories" ("catId")
+            FOREIGN KEY ("userId") REFERENCES "userId" ("userId")
             PRIMARY KEY ("questId", "userId")
         );`
       );
@@ -115,6 +118,7 @@ export const buildDatabase = (): void => {
             "missStreak" INTEGER,
             FOREIGN KEY ("questId") REFERENCES "quests" ("questId"),
             FOREIGN KEY ("typeId") REFERENCES "objectiveTypes" ("typeId")
+            FOREIGN KEY ("userId") REFERENCES "userId" ("userId")
             PRIMARY KEY ("id", "userId")
         );`
       );
@@ -138,6 +142,15 @@ export const buildDatabase = (): void => {
             "level" INTEGER NOT NULL DEFAULT 1,
             "exp" INTEGER NOT NULL DEFAULT 0
         );`
+      );
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS "expHistory" (
+            "userId" TEXT NOT NULL,
+            "timestamp" TEXT NOT NULL,
+            "expChange" INTEGER NOT NULL,
+            FOREIGN KEY ("userId") REFERENCES "userId" ("userId"),
+            PRIMARY KEY ("userId", "timestamp")
+          );`
       );
     },
     (err) => {

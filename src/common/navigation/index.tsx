@@ -52,7 +52,7 @@ function TabNavigator() {
       <BottomTab.Screen name="Quests" component={OtherScreen} />
       <BottomTab.Screen name="Record" component={HomeScreen} />
       <BottomTab.Screen name="Calendar" component={HomeScreen} />
-      <BottomTab.Screen name="Stats" component={HomeScreen} />
+      <BottomTab.Screen name="Stats" component={OtherScreen} />
     </BottomTab.Navigator>
   );
 }

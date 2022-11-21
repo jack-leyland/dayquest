@@ -8,6 +8,12 @@ export type User = {
     exp: number 
 }
 
+export type ExpHistoryRecord = {
+    userId: string,
+    timestamp: string,
+    expChange: number 
+}
+
 export type JWT = {
     exp: number,
     iat: number

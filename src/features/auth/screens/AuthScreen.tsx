@@ -53,15 +53,13 @@ export default function AuthScreen() {
   const lastUserId = useLastUserId();
   const lastUserTokens = useLocalTokens();
 
-  // When animation finishes, check if who the most recently logged in user was an
+  // When animation finishes, check who the most recently logged in user was and
   // fetch their record from the DB.
   useEffect(() => {
     if (isAnimationComplete) {
       if (!lastUserId) {
         dispatch(setDisplayedModal("picker"));
       } else {
-        // Set up and verify active user state
-        //bail out early if offline user
         const fetchUserFromDb = async () => {
           try {
             const user = await getUserRecord(lastUserId);
@@ -77,7 +75,7 @@ export default function AuthScreen() {
     }
   }, [isAnimationComplete]);
 
-  // When the user record is loaded, check for offline mode,
+  // When the user record is loaded, check for offline user flag,
   // check that the stored tokens belong to the same user and then update appState and route accordingly.
   useEffect(() => {
     if (user) {
@@ -141,7 +139,10 @@ export default function AuthScreen() {
           source={require("../../../../assets/images/splash.png")}
           style={styles.background}
           onLoad={() => {
-            SplashScreen.hideAsync();
+            const hideSplash = async () => {
+              await SplashScreen.hideAsync();
+            }
+            hideSplash()
             startAnimations();
           }}
         >
