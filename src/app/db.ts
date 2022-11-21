@@ -56,11 +56,15 @@ export const saveNewUserRecord = (user: User): Promise<User> => {
 
 export const buildDatabase = (): void => {
   const db = openDB();
+  // db.transaction(
+  //   (tx) => {
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS levelExpParams`
+  //     );
+  //   },(err)=>{console.log(err)},()=>{console.log("Table Dropped")})
+
   db.transaction(
     (tx) => {
-      // tx.executeSql(
-      //   `DROP TABLE IF EXISTS expHistory`
-      // );
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "questCategories" (
             "catId" INTEGER PRIMARY KEY,

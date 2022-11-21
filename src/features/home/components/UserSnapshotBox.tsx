@@ -1,11 +1,7 @@
 import {
   View,
-  TextInput,
-  StyleProp,
-  ViewStyle,
   StyleSheet,
   TouchableOpacity,
-  Pressable,
 } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
@@ -60,6 +56,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 16,
     padding: 10,
+    marginBottom: 10
   },
   content: {
     width: "100%",
@@ -71,7 +68,6 @@ const styles = StyleSheet.create({
   textBox: {
     height: "100%",
     justifyContent: "center",
-    //alignItems: "flex-start",
     flexGrow: 1,
     flex: 1,
     overflow: "hidden",

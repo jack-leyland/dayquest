@@ -14,6 +14,12 @@ export type ExpHistoryRecord = {
     expChange: number 
 }
 
+export type LevelExpParams = {
+    level: number,
+    expNeeded: number,
+    expPerCompletion: number 
+}
+
 export type JWT = {
     exp: number,
     iat: number
