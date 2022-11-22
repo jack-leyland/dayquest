@@ -14,3 +14,5 @@ web-build/
 .DS_Store
 
 .vscode/
+
+populate-dummy-data.js

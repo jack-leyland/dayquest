@@ -1,5 +1,5 @@
-import { openDB } from "../../../app/db";
-import { ExpHistoryRecord, LevelExpParams } from "../../../app/types";
+import { openDB } from "../../app/db";
+import { ExpHistoryRecord, LevelExpParams } from "../../app/types";
 
 export const getSortedExpHistory = (recordCount: number): Promise<Array<ExpHistoryRecord>> => {
     const db = openDB();

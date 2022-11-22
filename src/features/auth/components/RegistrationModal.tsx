@@ -4,57 +4,65 @@ import {
   Text,
   Pressable,
   ActivityIndicator,
-} from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { useRef, useState } from "react";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import jwt from "jwt-decode"
+} from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRef, useState } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import jwt from 'jwt-decode';
 
-import Colors from "../../../common/constants/Colors";
-import Layout from "../../../common/constants/Layout";
-import GrowingBottomTray from "../../../common/components/GrowingBottomTray";
+import Colors from '../../../common/constants/Colors';
+import Layout from '../../../common/constants/Layout';
+import GrowingBottomTray from '../../../common/components/GrowingBottomTray';
 import {
   overlayErrorModal,
   selectPreviousModalHeight,
   setDisplayedModal,
   setPreviousModalHeight,
-} from "../authSlice";
+} from '../authSlice';
 import {
   ThonburiBold,
   ThonburiLight,
-} from "../../../common/components/StyledText";
-import AuthFormTextInputBox from "./AuthFormInputBox";
-import validateEmail from "../../../common/util/validateEmail";
+} from '../../../common/components/StyledText';
+import AuthFormTextInputBox from './AuthFormInputBox';
+import validateEmail from '../../../common/util/validateEmail';
 import {
   RegistrationFormStatus,
   RegistrationPayload,
   PasswordFormStatus,
   FormStatus,
   RegistrationAPIResponse,
-} from "../types";
-import authServer from "../authServer";
-import RegistrationSuccess from "./RegistrationSuccess";
-import { persistAccessToken, persistRefreshToken, persistUserId } from "../persisters";
-import { setAccessToken, setActiveUser, setRefreshToken } from "../../../app/appSlice";
-import { JWT, User } from "../../../app/types";
-import useDeviceId from "../../../common/hooks/useDeviceId";
-import { saveNewUserRecord } from "../../../app/db";
+} from '../types';
+import authServer from '../authServer';
+import RegistrationSuccess from './RegistrationSuccess';
+import {
+  persistAccessToken,
+  persistRefreshToken,
+  persistUserId,
+} from '../persisters';
+import {
+  setAccessToken,
+  setActiveUser,
+  setRefreshToken,
+} from '../../../app/appSlice';
+import { JWT, User } from '../../../app/types';
+import useDeviceId from '../../../common/hooks/useDeviceId';
+import { saveNewUserRecord } from '../../../app/db';
 
 const defaultFormStatus: RegistrationFormStatus = {
   email: {
-    badInputText: "",
+    badInputText: '',
     isBadInput: false,
   },
   username: {
-    badInputText: "",
+    badInputText: '',
     isBadInput: false,
   },
   password: {
     criteria: [
-      "Minimum 8 characters",
-      "At least one uppercase character",
-      "At least one lowercase character",
-      "At least one number",
+      'Minimum 8 characters',
+      'At least one uppercase character',
+      'At least one lowercase character',
+      'At least one number',
     ],
     isBadInput: false,
   },
@@ -62,7 +70,7 @@ const defaultFormStatus: RegistrationFormStatus = {
 
 export default function RegistrationModal() {
   const [showForm, setShowForm] = useState<boolean>(false);
-  const [showSuccess, setSuccess] = useState<boolean>(false)
+  const [showSuccess, setSuccess] = useState<boolean>(false);
   const [registrationPayload, setRegistrationPayload] =
     useState<RegistrationPayload>({
       email: null,
@@ -78,7 +86,7 @@ export default function RegistrationModal() {
   const dispatch = useDispatch();
   const modalHeight = Math.round(Layout.window.height * 0.7);
   const lastModalHeight = useSelector(selectPreviousModalHeight);
-  const deviceId = useDeviceId()
+  const deviceId = useDeviceId();
 
   const triggerFormRender = () => {
     setShowForm(true);
@@ -101,13 +109,13 @@ export default function RegistrationModal() {
     if (!email || valid) {
       (update.email = {
         isBadInput: false,
-        badInputText: "",
+        badInputText: '',
       }),
         setRegistrationFormStatus(update);
     } else {
       (update.email = {
         isBadInput: true,
-        badInputText: "Please enter a valid email address",
+        badInputText: 'Please enter a valid email address',
       }),
         setRegistrationFormStatus(update);
     }
@@ -155,7 +163,7 @@ export default function RegistrationModal() {
     const newStatus = { ...registrationFormStatus };
     for (const field in registrationPayload) {
       if (registrationPayload[field as keyof RegistrationPayload]) continue;
-      if (field === "password") {
+      if (field === 'password') {
         newStatus.password = {
           ...newStatus.password,
           isBadInput: true,
@@ -163,7 +171,7 @@ export default function RegistrationModal() {
       } else {
         newStatus[field as keyof RegistrationPayload] = {
           badInputText: `Please enter ${
-            field === "email" ? "an" : "a"
+            field === 'email' ? 'an' : 'a'
           } ${field}`,
           isBadInput: true,
         } as FormStatus & PasswordFormStatus;
@@ -175,12 +183,14 @@ export default function RegistrationModal() {
   };
 
   const submitButtonHandler = () => {
-    if (!validatePayload()) return 
+    if (!validatePayload()) return;
     setLoading(true);
 
     const sendPayload = async () => {
       try {
-        const res = await authServer.post("/register", registrationPayload, {headers:{"device": deviceId}});
+        const res = await authServer.post('/register', registrationPayload, {
+          headers: { device: deviceId },
+        });
         const data = res.data as RegistrationAPIResponse;
 
         if (data.success) {
@@ -189,7 +199,7 @@ export default function RegistrationModal() {
           dispatch(setPreviousModalHeight(modalHeight));
 
           //save user record
-          const token: JWT = jwt(data.token as string)
+          const token: JWT = jwt(data.token as string);
 
           const user: User = {
             userId: token.user.userId,
@@ -198,17 +208,17 @@ export default function RegistrationModal() {
             deviceId: deviceId,
             isOfflineUser: false,
             level: 1,
-            exp: 0
-          }
+            exp: 0,
+          };
+          saveNewUserRecord(user)
+            .then((user) => {
+              dispatch(setActiveUser(persistUserId(user)));
+              setSuccess(true);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
 
-          saveNewUserRecord(user).then((user) => {
-            setActiveUser(persistUserId(user))
-            setSuccess(true)
-          }).catch((err) => {
-            console.log(err)
-          })
-
-          
           return;
         }
 
@@ -218,9 +228,8 @@ export default function RegistrationModal() {
           badInputText: `An account with that ${field} already exists!`,
           isBadInput: true,
         } as FormStatus & PasswordFormStatus;
-        
-        setRegistrationFormStatus(update);
 
+        setRegistrationFormStatus(update);
       } catch (err: any) {
         if (err.response) {
           if (err.response.status === 400) {
@@ -245,19 +254,19 @@ export default function RegistrationModal() {
       to={modalHeight}
       onAnimationFinish={triggerFormRender}
     >
-      {showSuccess && <RegistrationSuccess/>}
+      {showSuccess && <RegistrationSuccess />}
       {showForm && !showSuccess && (
         <KeyboardAwareScrollView
           scrollEnabled={true}
           resetScrollToCoords={{ x: 0, y: 0 }}
-          keyboardShouldPersistTaps={"handled"}
+          keyboardShouldPersistTaps={'handled'}
         >
           <Animated.View style={{ ...styles.container, opacity: fade }}>
             <ThonburiBold style={styles.topText}>Create Account</ThonburiBold>
             <AuthFormTextInputBox
-              topText={"Email Address"}
+              topText={'Email Address'}
               onChange={(text: string) => {
-                handleFormInput(text, "email");
+                handleFormInput(text, 'email');
               }}
               status={registrationFormStatus.email}
               isPassword={false}
@@ -265,9 +274,9 @@ export default function RegistrationModal() {
               validator={emailValidator}
             />
             <AuthFormTextInputBox
-              topText={"Username"}
+              topText={'Username'}
               onChange={(text: string) => {
-                handleFormInput(text, "username");
+                handleFormInput(text, 'username');
               }}
               status={registrationFormStatus.username}
               isPassword={false}
@@ -275,9 +284,9 @@ export default function RegistrationModal() {
               validator={usernameValidator}
             />
             <AuthFormTextInputBox
-              topText={"Password"}
+              topText={'Password'}
               onChange={(text: string) => {
-                handleFormInput(text, "password");
+                handleFormInput(text, 'password');
               }}
               status={registrationFormStatus.password}
               isPassword={true}
@@ -288,7 +297,7 @@ export default function RegistrationModal() {
               style={({ pressed }) => [
                 {
                   backgroundColor: pressed
-                    ? "white"
+                    ? 'white'
                     : Colors.common.lightYellow,
                 },
                 styles.signUpButton,
@@ -302,11 +311,11 @@ export default function RegistrationModal() {
               )}
             </Pressable>
             <ThonburiLight style={{ fontSize: 14 }}>
-              I already have an account.{" "}
+              I already have an account.{' '}
               <ThonburiLight
                 style={styles.linkText}
                 onPress={() => {
-                  dispatch(setDisplayedModal("login"));
+                  dispatch(setDisplayedModal('login'));
                   dispatch(setPreviousModalHeight(modalHeight));
                 }}
               >
@@ -322,34 +331,34 @@ export default function RegistrationModal() {
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    height: "100%",
-    width: "100%",
+    height: '100%',
+    width: '100%',
     borderWidth: 2,
-    borderColor: "white",
+    borderColor: 'white',
   },
   container: {
-    height: "100%",
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    height: '100%',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   topText: {
     fontSize: 20,
-    marginTop: "10%",
-    marginBottom: "10%",
+    marginTop: '10%',
+    marginBottom: '10%',
   },
   signUpButton: {
-    width: "80%",
+    width: '80%',
     height: 50,
     borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 25,
     marginBottom: 25,
   },
   buttonText: {
     color: Colors.light.text,
-    fontFamily: "thonburi-bold",
+    fontFamily: 'thonburi-bold',
     fontSize: 20,
   },
   linkText: {

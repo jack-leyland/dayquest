@@ -7,39 +7,38 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Modal,
-} from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import React, { useEffect, useRef, useState } from "react";
-import * as SplashScreen from "expo-splash-screen";
+} from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useRef, useState } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import {
   fetch as fetchNetInfo,
   NetInfoState,
-} from "@react-native-community/netinfo";
-import jwt from "jwt-decode";
+} from '@react-native-community/netinfo';
+import jwt from 'jwt-decode';
 
-import LevelUpIcon from "../../../../assets/noun-level-up.svg";
-import useLocalTokens from "../../../common/hooks/useLocalTokens";
+import LevelUpIcon from '../../../../assets/noun-level-up.svg';
+import useLocalTokens from '../../../common/hooks/useLocalTokens';
 import {
   disableAuthNavigator,
   renderErrorModal,
   selectActiveModal,
   setDisplayedModal,
-} from "../authSlice";
-import ActivityIndicatorLoader from "../../../common/components/ActivityIndicatorLoader";
-import SignInPicker from "../components/SignInPicker";
-import RegistrationModal from "../components/RegistrationModal";
-import LoginModal from "../components/LoginModal";
-import ErrorOverlay from "../components/ErrorOverlay";
+} from '../authSlice';
+import ActivityIndicatorLoader from '../../../common/components/ActivityIndicatorLoader';
+import SignInPicker from '../components/SignInPicker';
+import RegistrationModal from '../components/RegistrationModal';
+import LoginModal from '../components/LoginModal';
+import ErrorOverlay from '../components/ErrorOverlay';
 import {
   setAccessToken,
   setActiveUser,
   setOfflineMode,
   setRefreshToken,
-} from "../../../app/appSlice";
-import useLastUserId from "../../../common/hooks/useLastUserId";
-import { getUserRecord } from "../../../app/db";
-import { JWT, User } from "../../../app/types";
-
+} from '../../../app/appSlice';
+import useLastUserId from '../../../common/hooks/useLastUserId';
+import { getUserRecord } from '../../../app/db';
+import { JWT, User } from '../../../app/types';
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
@@ -58,7 +57,7 @@ export default function AuthScreen() {
   useEffect(() => {
     if (isAnimationComplete) {
       if (!lastUserId) {
-        dispatch(setDisplayedModal("picker"));
+        dispatch(setDisplayedModal('picker'));
       } else {
         const fetchUserFromDb = async () => {
           try {
@@ -67,7 +66,7 @@ export default function AuthScreen() {
           } catch (err) {
             console.log(err);
             //This means an SQL error. Send back to login screen.
-            dispatch(setDisplayedModal("picker"));
+            dispatch(setDisplayedModal('picker'));
           }
         };
         fetchUserFromDb();
@@ -85,7 +84,7 @@ export default function AuthScreen() {
       } else {
         //If for whatever reason there aren't tokens in the keychain
         if (!lastUserTokens.access || !lastUserTokens.refresh) {
-          dispatch(setDisplayedModal("picker"));
+          dispatch(setDisplayedModal('picker'));
         } else {
           handleAppInitialization(user);
         }
@@ -97,19 +96,22 @@ export default function AuthScreen() {
     try {
       const connectionState: NetInfoState = await fetchNetInfo();
       if (!connectionState.isConnected) {
-        //TODO: Modal Notifying user about what happends when you're offline? 
+        //TODO: Modal Notifying user about what happends when you're offline?
         dispatch(setOfflineMode(true));
-        dispatch(disableAuthNavigator())
+        dispatch(disableAuthNavigator());
       } else if (connectionState.isConnected) {
         const access: JWT = jwt(lastUserTokens.access as string);
         const refresh: JWT = jwt(lastUserTokens.refresh as string);
-        if (access.user.userId != lastUserId || refresh.user.userId != lastUserId) {
-          dispatch(setDisplayedModal("picker"))
+        if (
+          access.user.userId != lastUserId ||
+          refresh.user.userId != lastUserId
+        ) {
+          dispatch(setDisplayedModal('picker'));
         } else {
-          dispatch(setAccessToken(lastUserTokens.access))
-          dispatch(setRefreshToken(lastUserTokens.refresh))
-          dispatch(setActiveUser(user))
-          dispatch(disableAuthNavigator())
+          dispatch(setAccessToken(lastUserTokens.access));
+          dispatch(setRefreshToken(lastUserTokens.refresh));
+          dispatch(setActiveUser(user));
+          dispatch(disableAuthNavigator());
         }
       }
     } catch (err) {
@@ -136,13 +138,13 @@ export default function AuthScreen() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.viewContainer}>
         <ImageBackground
-          source={require("../../../../assets/images/splash.png")}
+          source={require('../../../../assets/images/splash.png')}
           style={styles.background}
           onLoad={() => {
             const hideSplash = async () => {
               await SplashScreen.hideAsync();
-            }
-            hideSplash()
+            };
+            hideSplash();
             startAnimations();
           }}
         >
@@ -155,19 +157,19 @@ export default function AuthScreen() {
             <Text style={styles.logoText}>DayQuest</Text>
             <View style={styles.sloganBox}>
               <Text style={styles.sloganText}>Level up your habits</Text>
-              <LevelUpIcon width={40} height={40} fill={"#000000"} />
+              <LevelUpIcon width={40} height={40} fill={'#000000'} />
             </View>
           </Animated.View>
-          {activeModal === "login" && <LoginModal />}
-          {activeModal === "register" && <RegistrationModal />}
-          {activeModal === "picker" && <SignInPicker />}
-          {activeModal === "loader" && (
+          {activeModal === 'login' && <LoginModal />}
+          {activeModal === 'register' && <RegistrationModal />}
+          {activeModal === 'picker' && <SignInPicker />}
+          {activeModal === 'loader' && (
             <ActivityIndicatorLoader
               viewStyle={{ ...styles.loader, opacity: fadeLoader }}
-              text={"Checking in with the guild..."}
+              text={'Checking in with the guild...'}
               textStyle={styles.loaderText}
-              indicatorColor={"black"}
-              indicatorSize={"large"}
+              indicatorColor={'black'}
+              indicatorSize={'large'}
             />
           )}
         </ImageBackground>
@@ -178,49 +180,49 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   background: {
-    height: "100%",
-    width: "100%",
+    height: '100%',
+    width: '100%',
     zIndex: -1,
   },
   viewContainer: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
   },
   logoContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
     flexGrow: 1,
-    maxHeight: "80%",
+    maxHeight: '80%',
   },
   sloganBox: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoText: {
     fontSize: 80,
-    fontFamily: "euphoria",
-    width: "100%",
-    textAlign: "center",
+    fontFamily: 'euphoria',
+    width: '100%',
+    textAlign: 'center',
   },
   sloganText: {
-    fontFamily: "thonburi-light",
+    fontFamily: 'thonburi-light',
     fontSize: 18,
     marginLeft: 14,
   },
   loader: {
-    width: "100%",
-    height: "20%",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "center",
+    width: '100%',
+    height: '20%',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   loaderText: {
-    fontFamily: "thonburi-light",
+    fontFamily: 'thonburi-light',
     marginLeft: 8,
   },
 });

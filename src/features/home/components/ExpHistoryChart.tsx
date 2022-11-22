@@ -1,23 +1,19 @@
-import { ModalView } from "../../../common/components/Themed";
-import {
-  LayoutRectangle,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ModalView } from '../../../common/components/Themed';
+import { LayoutRectangle, StyleSheet, View } from 'react-native';
 
 import {
   ThonburiBold,
   ThonburiLight,
-} from "../../../common/components/StyledText";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { selectActiveUser } from "../../../app/appSlice";
-import { ExpHistoryRecord, LevelExpParams } from "../../../app/types";
-import { getLevelExpParams, getSortedExpHistory } from "../screens/queries";
-import { VictoryBar, VictoryAxis, VictoryChart } from "victory-native";
-import Colors from "../../../common/constants/Colors";
-import useColorScheme from "../../../common/hooks/useColorScheme";
-import { selectExpHistory, setExpHistory } from "../homeSlice";
+} from '../../../common/components/StyledText';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectActiveUser } from '../../../app/appSlice';
+import { ExpHistoryRecord, LevelExpParams } from '../../../app/types';
+import { getLevelExpParams, getSortedExpHistory } from '../queries';
+import { VictoryBar, VictoryAxis, VictoryChart } from 'victory-native';
+import Colors from '../../../common/constants/Colors';
+import useColorScheme from '../../../common/hooks/useColorScheme';
+import { selectExpHistory, setExpHistory } from '../homeSlice';
 
 type ChartDataObject = {
   x: number;
@@ -35,12 +31,25 @@ type ChartData = {
 // Change this to set maximum amount of days of history to show in chart
 const MAX_HISTORY_DAYS = 20;
 
+const intialChartData: ChartData = {
+  data: Array.apply(MAX_HISTORY_DAYS).map((v, i) => {
+    return {
+      x: i,
+      y: 0,
+      fill: '#fff',
+    };
+  }),
+  maxY: 0,
+  minY: 0,
+  tickValues: [],
+};
+
 export function ExpHistoryChart() {
   const [showChart, setShowChart] = useState<boolean>(false);
   const [expParams, setExpParams] = useState<LevelExpParams | null>(null);
   const [chartContainerLayout, setChartContainerLayout] =
     useState<LayoutRectangle | null>(null);
-  const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [chartData, setChartData] = useState<ChartData | null>(intialChartData);
 
   const dispatch = useDispatch();
   const activeUser = useSelector(selectActiveUser);
@@ -143,7 +152,7 @@ export function ExpHistoryChart() {
                   animate={{
                     onEnter: {
                       duration: 1000,
-                    }
+                    },
                   }}
                 />
                 <VictoryAxis
@@ -151,7 +160,7 @@ export function ExpHistoryChart() {
                   tickValues={chartData.tickValues}
                   tickFormat={(t, i, ticks) => {
                     if (i !== 0 && i !== ticks.length - 1) {
-                      return "";
+                      return '';
                     } else {
                       return t;
                     }
@@ -177,7 +186,7 @@ export function ExpHistoryChart() {
                 activeUser &&
                 expParams?.expNeeded -
                   activeUser?.exp +
-                  " to lvl " +
+                  ' to lvl ' +
                   expParams.level}
             </ThonburiLight>
           </View>
@@ -189,24 +198,24 @@ export function ExpHistoryChart() {
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
+    width: '100%',
     height: 180,
     borderRadius: 16,
     padding: 5,
     paddingHorizontal: 10,
   },
   chart: {
-    height: "80%",
-    width: "100%",
-    overflow: "hidden",
+    height: '80%',
+    width: '100%',
+    overflow: 'hidden',
   },
   title: {
-    width: "100%",
-    height: "10%",
+    width: '100%',
+    height: '10%',
   },
   subTitle: {
-    width: "100%",
-    height: "10%",
-    alignItems: "flex-end",
+    width: '100%',
+    height: '10%',
+    alignItems: 'flex-end',
   },
 });
