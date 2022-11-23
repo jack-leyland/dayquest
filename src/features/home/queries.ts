@@ -1,6 +1,10 @@
 import { openDB } from "../../app/db";
 import { ExpHistoryRecord, LevelExpParams } from "../../app/types";
 
+
+// These records are added chronologically, so the sort here should really be unnessary.
+// If the records aren't sorted, the sort will have to happen in the query, not after the LIMIT.
+// TODO: figure out how to sort by date string in SQLite since it's just a date string
 export const getSortedExpHistory = (recordCount: number): Promise<Array<ExpHistoryRecord>> => {
     const db = openDB();
     return new Promise((resolve, reject) => {

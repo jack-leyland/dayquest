@@ -59,7 +59,7 @@ export const buildDatabase = (): void => {
   // db.transaction(
   //   (tx) => {
   //     tx.executeSql(
-  //       `DROP TABLE IF EXISTS levelExpParams`
+  //       `DROP TABLE IF EXISTS expHistory`
   //     );
   //   },(err)=>{console.log(err)},()=>{console.log("Table Dropped")})
 

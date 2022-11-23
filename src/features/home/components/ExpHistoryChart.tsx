@@ -1,12 +1,12 @@
-import { ModalView } from '../../../common/components/Themed';
 import { LayoutRectangle, StyleSheet, View } from 'react-native';
-
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
+  ThonburiRegular,
   ThonburiBold,
   ThonburiLight,
 } from '../../../common/components/StyledText';
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { ModalView } from '../../../common/components/Themed';
 import { selectActiveUser } from '../../../app/appSlice';
 import { ExpHistoryRecord, LevelExpParams } from '../../../app/types';
 import { getLevelExpParams, getSortedExpHistory } from '../queries';
@@ -21,8 +21,7 @@ type ChartDataObject = {
   fill: string;
 };
 
-type ChartData = {
-  data: Array<ChartDataObject>;
+type ChartParams = {
   maxY: number;
   minY: number;
   tickValues: Array<string>;
@@ -31,14 +30,18 @@ type ChartData = {
 // Change this to set maximum amount of days of history to show in chart
 const MAX_HISTORY_DAYS = 20;
 
-const intialChartData: ChartData = {
-  data: Array.apply(MAX_HISTORY_DAYS).map((v, i) => {
-    return {
-      x: i,
-      y: 0,
-      fill: '#fff',
-    };
-  }),
+// Change this to set animation duration (ms).
+const ANIMATION_DURATION = 500;
+
+let initialData: Array<ChartDataObject> = [];
+for (let i = 0; i < MAX_HISTORY_DAYS + 1; i++) {
+  initialData.push({
+    x: i,
+    y: 0,
+    fill: '#fff',
+  });
+}
+const intialParams = {
   maxY: 0,
   minY: 0,
   tickValues: [],
@@ -49,7 +52,9 @@ export function ExpHistoryChart() {
   const [expParams, setExpParams] = useState<LevelExpParams | null>(null);
   const [chartContainerLayout, setChartContainerLayout] =
     useState<LayoutRectangle | null>(null);
-  const [chartData, setChartData] = useState<ChartData | null>(intialChartData);
+  const [chartParams, setChartParams] = useState<ChartParams>(intialParams);
+  const [chartData, setChartData] =
+    useState<Array<ChartDataObject>>(initialData);
 
   const dispatch = useDispatch();
   const activeUser = useSelector(selectActiveUser);
@@ -68,7 +73,13 @@ export function ExpHistoryChart() {
       getSortedExpHistory(MAX_HISTORY_DAYS)
         .then((records) => {
           dispatch(setExpHistory(records));
-          setChartData(calculateChartDate(records));
+          let newChartInfo = composeChartInfo(records);
+          setChartParams({
+            maxY: newChartInfo.maxY,
+            minY: newChartInfo.minY,
+            tickValues: newChartInfo.tickValues,
+          });
+          setChartData(newChartInfo.data);
         })
         .catch((err) => {
           console.log(err);
@@ -76,7 +87,7 @@ export function ExpHistoryChart() {
     }
   }, [activeUser]);
 
-  const calculateChartDate = (records: Array<ExpHistoryRecord>) => {
+  const composeChartInfo = (records: Array<ExpHistoryRecord>) => {
     let data: Array<ChartDataObject> = [];
     let tickValues: Array<string> = [];
     let max: number = 0;
@@ -95,11 +106,8 @@ export function ExpHistoryChart() {
         fill:
           record.expChange > 0 ? Colors.common.richGreen : Colors.common.red,
       });
-      tickValues.push(
-        `${new Date(record.timestamp).getMonth() + 1}-${new Date(
-          record.timestamp
-        ).getDate()}`
-      );
+      let date = new Date(record.timestamp);
+      tickValues.push(`${date.getMonth() + 1}-${date.getDate()}`);
     });
 
     return {
@@ -111,10 +119,10 @@ export function ExpHistoryChart() {
   };
 
   useEffect(() => {
-    if (expHistory && expParams) {
+    if (chartParams && expHistory && expParams) {
       setShowChart(true);
     }
-  }, [expHistory, expParams, chartContainerLayout]);
+  }, [expHistory, expParams, chartParams]);
 
   return (
     <ModalView style={styles.container}>
@@ -123,7 +131,7 @@ export function ExpHistoryChart() {
           <View style={styles.title}>
             <ThonburiBold>Daily Experience Summary</ThonburiBold>
           </View>
-          {chartData && (
+          {chartData && chartData.length > 0 && (
             <View
               style={styles.chart}
               onLayout={(event) => {
@@ -133,7 +141,7 @@ export function ExpHistoryChart() {
               <VictoryChart
                 domain={{
                   x: [0, MAX_HISTORY_DAYS + 1],
-                  y: [chartData.minY, chartData.maxY],
+                  y: [chartParams.minY, chartParams.maxY],
                 }}
                 padding={10}
                 height={chartContainerLayout?.height}
@@ -141,23 +149,23 @@ export function ExpHistoryChart() {
               >
                 <VictoryBar
                   barWidth={7}
+                  animate={{
+                    onLoad: {
+                      duration: ANIMATION_DURATION,
+                    },
+                  }}
                   alignment="middle"
                   cornerRadius={{ topLeft: 4, topRight: 4 }}
-                  data={chartData.data}
+                  data={chartData}
                   style={{
                     data: {
                       fill: ({ datum }) => datum.fill,
                     },
                   }}
-                  animate={{
-                    onEnter: {
-                      duration: 1000,
-                    },
-                  }}
                 />
                 <VictoryAxis
                   tickCount={MAX_HISTORY_DAYS + 2}
-                  tickValues={chartData.tickValues}
+                  tickValues={chartParams.tickValues}
                   tickFormat={(t, i, ticks) => {
                     if (i !== 0 && i !== ticks.length - 1) {
                       return '';
@@ -179,7 +187,11 @@ export function ExpHistoryChart() {
               </VictoryChart>
             </View>
           )}
-
+          {chartData && chartData.length === 0 && (
+            <View style={styles.placeholderText}>
+              <ThonburiRegular>Time to get questing!</ThonburiRegular>
+            </View>
+          )}
           <View style={styles.subTitle}>
             <ThonburiLight style={{ fontSize: 12 }}>
               {expParams &&
@@ -208,6 +220,13 @@ const styles = StyleSheet.create({
     height: '80%',
     width: '100%',
     overflow: 'hidden',
+  },
+  placeholderText: {
+    height: '80%',
+    width: '100%',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     width: '100%',
