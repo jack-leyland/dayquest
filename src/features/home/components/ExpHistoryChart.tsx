@@ -8,7 +8,7 @@ import {
 } from '../../../common/components/StyledText';
 import { ModalView } from '../../../common/components/Themed';
 import { selectActiveUser } from '../../../app/appSlice';
-import { ExpHistoryRecord, LevelExpParams } from '../../../app/types';
+import { ExpHistoryRecord, LevelExpParams } from '../types';
 import { getLevelExpParams, getSortedExpHistory } from '../queries';
 import { VictoryBar, VictoryAxis, VictoryChart } from 'victory-native';
 import Colors from '../../../common/constants/Colors';

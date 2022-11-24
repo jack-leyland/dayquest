@@ -2,18 +2,18 @@ import {
   NavigationContainer,
   DefaultTheme,
   DarkTheme,
-} from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import BottomTabBar from "../components/BottomTabBar";
-import * as React from "react";
-import { ColorSchemeName } from "react-native";
-import { useSelector } from "react-redux";
+} from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import BottomTabBar from '../components/BottomTabBar';
+import * as React from 'react';
+import { ColorSchemeName } from 'react-native';
+import { useSelector } from 'react-redux';
 
-import { renderAuthNavigator } from "../../features/auth/authSlice";
-import { BottomTabParamList } from "./types";
-import AuthScreen from "../../features/auth/screens/AuthScreen";
-import HomeScreen from "../../features/home/screens/HomeScreen";
-import OtherScreen from "../../features/home/screens/OtherScreen";
+import { renderAuthNavigator } from '../../features/auth/authSlice';
+import { BottomTabParamList } from './types';
+import AuthScreen from '../../features/auth/screens/AuthScreen';
+import HomeScreen from '../../features/home/screens/HomeScreen';
+import OtherScreen from '../../features/home/screens/OtherScreen';
 
 export default function Navigation({
   colorScheme,
@@ -22,7 +22,7 @@ export default function Navigation({
 }) {
   return (
     <NavigationContainer
-      theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+      theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
     >
       <RootNavigator />
     </NavigationContainer>
@@ -51,7 +51,7 @@ function TabNavigator() {
       <BottomTab.Screen name="Home" component={HomeScreen} />
       <BottomTab.Screen name="Quests" component={OtherScreen} />
       <BottomTab.Screen name="Record" component={HomeScreen} />
-      <BottomTab.Screen name="Calendar" component={HomeScreen} />
+      <BottomTab.Screen name="Achieve" component={HomeScreen} />
       <BottomTab.Screen name="Stats" component={OtherScreen} />
     </BottomTab.Navigator>
   );

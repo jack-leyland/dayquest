@@ -5,10 +5,10 @@
     "version": "0.0.1",
     "owner": "jack-leyland",
     "orientation": "portrait",
-    "entryPoint": "./src/app/App.tsx", 
+    "entryPoint": "./src/app/App.tsx",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "cover",

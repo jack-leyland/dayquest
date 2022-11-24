@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { ExpHistoryRecord } from '../../../app/types';
+import { ExpHistoryRecord } from '../types';
 import { ThonburiBold } from '../../../common/components/StyledText';
 import { selectExpHistory } from '../homeSlice';
 
