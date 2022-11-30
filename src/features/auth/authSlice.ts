@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 
 export interface AuthState {
-  authFlowActive: Boolean;
   modalToRender: "loader" | "login" | "register" | "picker";
   overlayErrorModal: boolean;
   accessToken: string | null;
@@ -13,7 +12,6 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-  authFlowActive: true,
   modalToRender: "loader",
   overlayErrorModal: false,
   accessToken: null,
@@ -28,12 +26,6 @@ export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    disableAuthNavigator: (state) => {
-      state.authFlowActive = false;
-    },
-    enableAuthNavigator: (state) => {
-      state.authFlowActive = true;
-    },
     overlayErrorModal: (
       state,
       action: PayloadAction<AuthState["overlayErrorModal"]>
@@ -63,8 +55,6 @@ export const authSlice = createSlice({
 
 export const renderErrorModal = (state: RootState) =>
   state.auth.overlayErrorModal;
-export const renderAuthNavigator = (state: RootState) =>
-  state.auth.authFlowActive;
 export const selectActiveModal = (state: RootState) => state.auth.modalToRender;
 export const selectPreviousModalHeight = (state: RootState) =>
   state.auth.previousModalHeight;
@@ -72,8 +62,6 @@ export const selectOverlayErrorMessage = (state: RootState) =>
   state.auth.overlayErrorMessage;
 
 export const {
-  disableAuthNavigator,
-  enableAuthNavigator,
   setDisplayedModal,
   setPreviousModalHeight,
   overlayErrorModal,

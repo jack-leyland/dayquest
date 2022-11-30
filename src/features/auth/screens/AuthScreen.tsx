@@ -20,7 +20,6 @@ import jwt from 'jwt-decode';
 import LevelUpIcon from '../../../../assets/noun-level-up.svg';
 import useLocalTokens from '../../../common/hooks/useLocalTokens';
 import {
-  disableAuthNavigator,
   renderErrorModal,
   selectActiveModal,
   setDisplayedModal,
@@ -39,6 +38,8 @@ import {
 import useLastUserId from '../../../common/hooks/useLastUserId';
 import { getUserRecord } from '../../../app/db';
 import { JWT, User } from '../../../app/types';
+import { useNavigation } from '@react-navigation/native';
+import { RootNavigationProps } from '../../../common/navigation/types';
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
@@ -51,6 +52,7 @@ export default function AuthScreen() {
   const showErrorOverlay = useSelector(renderErrorModal);
   const lastUserId = useLastUserId();
   const lastUserTokens = useLocalTokens();
+  const navigation = useNavigation<RootNavigationProps>();
 
   // When animation finishes, check who the most recently logged in user was and
   // fetch their record from the DB.
@@ -80,7 +82,7 @@ export default function AuthScreen() {
     if (user) {
       dispatch(setActiveUser(user));
       if (user.isOfflineUser) {
-        dispatch(disableAuthNavigator());
+        navigation.navigate('TabNavigator');
       } else {
         //If for whatever reason there aren't tokens in the keychain
         if (!lastUserTokens.access || !lastUserTokens.refresh) {
@@ -98,7 +100,7 @@ export default function AuthScreen() {
       if (!connectionState.isConnected) {
         //TODO: Modal Notifying user about what happends when you're offline?
         dispatch(setOfflineMode(true));
-        dispatch(disableAuthNavigator());
+        navigation.navigate('TabNavigator');
       } else if (connectionState.isConnected) {
         const access: JWT = jwt(lastUserTokens.access as string);
         const refresh: JWT = jwt(lastUserTokens.refresh as string);
@@ -111,7 +113,7 @@ export default function AuthScreen() {
           dispatch(setAccessToken(lastUserTokens.access));
           dispatch(setRefreshToken(lastUserTokens.refresh));
           dispatch(setActiveUser(user));
-          dispatch(disableAuthNavigator());
+          navigation.navigate('TabNavigator');
         }
       }
     } catch (err) {

@@ -1,3 +1,12 @@
+import { StackNavigationProp } from '@react-navigation/stack';
+
+export type RootStackParamList = {
+  TabNavigator: undefined;
+  Auth: undefined;
+  ErrorModal: undefined;
+  NotFound: undefined;
+};
+
 export type BottomTabParamList = {
   Home: undefined;
   Quests: undefined;
@@ -5,3 +14,5 @@ export type BottomTabParamList = {
   Record: undefined;
   Stats: undefined;
 };
+
+export type RootNavigationProps = StackNavigationProp<RootStackParamList>;

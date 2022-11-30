@@ -4,13 +4,12 @@ import {
   DarkTheme,
 } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import BottomTabBar from '../components/BottomTabBar';
 import * as React from 'react';
 import { ColorSchemeName } from 'react-native';
-import { useSelector } from 'react-redux';
 
-import { renderAuthNavigator } from '../../features/auth/authSlice';
-import { BottomTabParamList } from './types';
+import { BottomTabParamList, RootStackParamList } from './types';
 import AuthScreen from '../../features/auth/screens/AuthScreen';
 import HomeScreen from '../../features/home/screens/HomeScreen';
 import OtherScreen from '../../features/home/screens/OtherScreen';
@@ -28,14 +27,23 @@ export default function Navigation({
     </NavigationContainer>
   );
 }
+const RootStack = createStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
-  const authActive = useSelector(renderAuthNavigator);
-  if (authActive) {
-    return <AuthScreen />;
-  } else {
-    return TabNavigator();
-  }
+  return (
+    <RootStack.Navigator
+      initialRouteName="Auth"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <RootStack.Screen name="Auth" component={AuthScreen} />
+      <RootStack.Screen name="TabNavigator" component={TabNavigator} />
+      <RootStack.Group screenOptions={{ presentation: 'modal' }}>
+        <RootStack.Screen name="ErrorModal" component={TabNavigator} />
+      </RootStack.Group>
+    </RootStack.Navigator>
+  );
 }
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
