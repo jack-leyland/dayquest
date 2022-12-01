@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
-import { LoginAPIResponse } from "./types";
+import { LoginAPIResponse, SuccessfulLoginAPIResponse } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from "../../app/types";
+import { User } from "../../../app/types";
 
 // NOTE: These functions will eventually be replaced with react-thunk once the application is more mature.
 
@@ -15,8 +15,8 @@ import { User } from "../../app/types";
 // they open the app to get new tokens.
 
 export const persistAccessToken = (
-  token: LoginAPIResponse["access"]
-): LoginAPIResponse["access"] => {
+  token: SuccessfulLoginAPIResponse["access"]
+): SuccessfulLoginAPIResponse["access"] => {
   if (!token) return token;
   const save = async () => {
     try {
@@ -30,8 +30,8 @@ export const persistAccessToken = (
 };
 
 export const persistRefreshToken = (
-  token: LoginAPIResponse["refresh"]
-): LoginAPIResponse["refresh"] => {
+  token: SuccessfulLoginAPIResponse["refresh"]
+): SuccessfulLoginAPIResponse["refresh"] => {
   if (!token) return token;
   const save = async () => {
     try {

@@ -3,7 +3,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 export type RootStackParamList = {
   TabNavigator: undefined;
   Auth: undefined;
-  ErrorModal: undefined;
+  GlobalErrorModal: undefined;
   NotFound: undefined;
 };
 

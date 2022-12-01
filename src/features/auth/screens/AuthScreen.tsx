@@ -6,7 +6,6 @@ import {
   Text,
   Keyboard,
   TouchableWithoutFeedback,
-  Modal,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useEffect, useRef, useState } from 'react';
@@ -19,16 +18,11 @@ import jwt from 'jwt-decode';
 
 import LevelUpIcon from '../../../../assets/noun-level-up.svg';
 import useLocalTokens from '../../../common/hooks/useLocalTokens';
-import {
-  renderErrorModal,
-  selectActiveModal,
-  setDisplayedModal,
-} from '../authSlice';
+import { selectActiveModal, setDisplayedModal } from '../authSlice';
 import ActivityIndicatorLoader from '../../../common/components/ActivityIndicatorLoader';
 import SignInPicker from '../components/SignInPicker';
 import RegistrationModal from '../components/RegistrationModal';
 import LoginModal from '../components/LoginModal';
-import ErrorOverlay from '../components/ErrorOverlay';
 import {
   setAccessToken,
   setActiveUser,
@@ -49,7 +43,6 @@ export default function AuthScreen() {
 
   const dispatch = useDispatch();
   const activeModal = useSelector(selectActiveModal);
-  const showErrorOverlay = useSelector(renderErrorModal);
   const lastUserId = useLastUserId();
   const lastUserTokens = useLocalTokens();
   const navigation = useNavigation<RootNavigationProps>();
@@ -79,19 +72,21 @@ export default function AuthScreen() {
   // When the user record is loaded, check for offline user flag,
   // check that the stored tokens belong to the same user and then update appState and route accordingly.
   useEffect(() => {
-    if (user) {
-      dispatch(setActiveUser(user));
-      if (user.isOfflineUser) {
-        navigation.navigate('TabNavigator');
-      } else {
-        //If for whatever reason there aren't tokens in the keychain
-        if (!lastUserTokens.access || !lastUserTokens.refresh) {
-          dispatch(setDisplayedModal('picker'));
-        } else {
-          handleAppInitialization(user);
-        }
-      }
-    }
+    //testing bypass
+    dispatch(setDisplayedModal('picker'));
+    // if (user) {
+    //   dispatch(setActiveUser(user));
+    //   if (user.isOfflineUser) {
+    //     navigation.navigate('TabNavigator');
+    //   } else {
+    //     //If for whatever reason there aren't tokens in the keychain
+    //     if (!lastUserTokens.access || !lastUserTokens.refresh) {
+    //       dispatch(setDisplayedModal('picker'));
+    //     } else {
+    //       handleAppInitialization(user);
+    //     }
+    //   }
+    // }
   }, [user]);
 
   const handleAppInitialization = async (user: User) => {
@@ -150,11 +145,6 @@ export default function AuthScreen() {
             startAnimations();
           }}
         >
-          {showErrorOverlay && (
-            <Modal transparent={true} animationType="fade">
-              <ErrorOverlay />
-            </Modal>
-          )}
           <Animated.View style={{ ...styles.logoContainer, opacity: fadeLogo }}>
             <Text style={styles.logoText}>DayQuest</Text>
             <View style={styles.sloganBox}>

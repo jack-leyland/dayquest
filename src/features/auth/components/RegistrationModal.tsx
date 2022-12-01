@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRef, useState } from 'react';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import jwt from 'jwt-decode';
+import axios, { AxiosError } from 'axios';
 
 import Colors from '../../../common/constants/Colors';
 import Layout from '../../../common/constants/Layout';
@@ -31,6 +32,8 @@ import {
   PasswordFormStatus,
   FormStatus,
   RegistrationAPIResponse,
+  isSuccessfulRegistrationResponse,
+  isUnsuccessfulRegistrationResponse,
 } from '../types';
 import authServer from '../authServer';
 import RegistrationSuccess from './RegistrationSuccess';
@@ -38,15 +41,18 @@ import {
   persistAccessToken,
   persistRefreshToken,
   persistUserId,
-} from '../persisters';
+} from '../util/persisters';
 import {
   setAccessToken,
   setActiveUser,
+  setGlobalErrorMessage,
   setRefreshToken,
 } from '../../../app/appSlice';
 import { JWT, User } from '../../../app/types';
 import useDeviceId from '../../../common/hooks/useDeviceId';
 import { saveNewUserRecord } from '../../../app/db';
+import { useNavigation } from '@react-navigation/native';
+import { RootNavigationProps } from '../../../common/navigation/types';
 
 const defaultFormStatus: RegistrationFormStatus = {
   email: {
@@ -87,6 +93,7 @@ export default function RegistrationModal() {
   const modalHeight = Math.round(Layout.window.height * 0.7);
   const lastModalHeight = useSelector(selectPreviousModalHeight);
   const deviceId = useDeviceId();
+  const navigation = useNavigation<RootNavigationProps>();
 
   const triggerFormRender = () => {
     setShowForm(true);
@@ -193,14 +200,13 @@ export default function RegistrationModal() {
         });
         const data = res.data as RegistrationAPIResponse;
 
-        if (data.success) {
+        if (data.success && isSuccessfulRegistrationResponse(data)) {
           dispatch(setAccessToken(persistAccessToken(data.token)));
           dispatch(setRefreshToken(persistRefreshToken(data.refresh)));
           dispatch(setPreviousModalHeight(modalHeight));
 
           //save user record
           const token: JWT = jwt(data.token as string);
-
           const user: User = {
             userId: token.user.userId,
             username: registrationPayload.username as string,
@@ -210,6 +216,7 @@ export default function RegistrationModal() {
             level: 1,
             exp: 0,
           };
+
           saveNewUserRecord(user)
             .then((user) => {
               dispatch(setActiveUser(persistUserId(user)));
@@ -218,28 +225,44 @@ export default function RegistrationModal() {
             .catch((err) => {
               console.log(err);
             });
-
           return;
+        } else if (isUnsuccessfulRegistrationResponse(data)) {
+          const update = { ...registrationFormStatus };
+          update[data.alreadyExists] = {
+            badInputText: `An account with that ${data.alreadyExists} already exists!`,
+            isBadInput: true,
+          } as FormStatus & PasswordFormStatus;
+          setRegistrationFormStatus(update);
+        } else {
+          throw new Error('Malformed Response');
+        }
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          dispatch(
+            setGlobalErrorMessage(
+              'An unknown error occured. Please try again later. \n\n'
+            )
+          );
+          setRegistrationFormStatus(defaultFormStatus);
+          navigation.navigate('GlobalErrorModal');
         }
 
-        const field = data.alreadyExists as keyof RegistrationFormStatus;
-        const update = { ...registrationFormStatus };
-        update[field] = {
-          badInputText: `An account with that ${field} already exists!`,
-          isBadInput: true,
-        } as FormStatus & PasswordFormStatus;
-
-        setRegistrationFormStatus(update);
-      } catch (err: any) {
-        if (err.response) {
-          if (err.response.status === 400) {
-            console.log(err.response.data.message);
-          } else {
-            console.log(err.response.data);
-          }
+        const error = err as AxiosError;
+        if (error.response?.status && error.response?.status === 400) {
+          dispatch(
+            setGlobalErrorMessage(
+              (error.response?.data as { message: string }).message
+            )
+          );
+        } else {
+          dispatch(
+            setGlobalErrorMessage(
+              'An error occured communicating with our servers. Please try again later. \n\n'
+            )
+          );
         }
         setRegistrationFormStatus(defaultFormStatus);
-        dispatch(overlayErrorModal(true));
+        navigation.navigate('GlobalErrorModal');
       } finally {
         setLoading(false);
       }

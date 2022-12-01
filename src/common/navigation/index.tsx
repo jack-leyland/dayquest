@@ -13,6 +13,7 @@ import { BottomTabParamList, RootStackParamList } from './types';
 import AuthScreen from '../../features/auth/screens/AuthScreen';
 import HomeScreen from '../../features/home/screens/HomeScreen';
 import OtherScreen from '../../features/home/screens/OtherScreen';
+import GlobalErrorModal from '../components/GlobalErrorModal';
 
 export default function Navigation({
   colorScheme,
@@ -39,8 +40,11 @@ function RootNavigator() {
     >
       <RootStack.Screen name="Auth" component={AuthScreen} />
       <RootStack.Screen name="TabNavigator" component={TabNavigator} />
-      <RootStack.Group screenOptions={{ presentation: 'modal' }}>
-        <RootStack.Screen name="ErrorModal" component={TabNavigator} />
+      <RootStack.Group screenOptions={{ presentation: 'transparentModal' }}>
+        <RootStack.Screen
+          name="GlobalErrorModal"
+          component={GlobalErrorModal}
+        />
       </RootStack.Group>
     </RootStack.Navigator>
   );

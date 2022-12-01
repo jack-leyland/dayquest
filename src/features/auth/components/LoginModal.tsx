@@ -14,7 +14,6 @@ import Colors from '../../../common/constants/Colors';
 import Layout from '../../../common/constants/Layout';
 import GrowingBottomTray from '../../../common/components/GrowingBottomTray';
 import {
-  overlayErrorModal,
   selectPreviousModalHeight,
   setDisplayedModal,
   setPreviousModalHeight,
@@ -26,6 +25,8 @@ import {
 import AuthFormTextInputBox from './AuthFormInputBox';
 import {
   FormStatus,
+  isSuccessfulLoginResponse,
+  isUnsuccessfulLoginResponse,
   LoginAPIResponse,
   LoginFormStatus,
   LoginPayload,
@@ -36,10 +37,11 @@ import {
   persistAccessToken,
   persistRefreshToken,
   persistUserId,
-} from '../persisters';
+} from '../util/persisters';
 import {
   setAccessToken,
   setActiveUser,
+  setGlobalErrorMessage,
   setRefreshToken,
 } from '../../../app/appSlice';
 import { JWT } from '../../../app/types';
@@ -47,6 +49,7 @@ import { getUserRecord } from '../../../app/db';
 import useDeviceId from '../../../common/hooks/useDeviceId';
 import { useNavigation } from '@react-navigation/native';
 import { RootNavigationProps } from '../../../common/navigation/types';
+import axios, { AxiosError } from 'axios';
 
 const defaultFormStatus = {
   id: {
@@ -136,10 +139,13 @@ export default function LoginModal() {
           headers: { device: deviceId },
         });
         const data = res.data as LoginAPIResponse;
-        if (data.success) {
+
+        if (data.success && isSuccessfulLoginResponse(data)) {
           dispatch(setAccessToken(persistAccessToken(data.access)));
           dispatch(setRefreshToken(persistRefreshToken(data.refresh)));
           const token: JWT = jwt(data.access as string);
+
+          //TODO: Handle existing user login on new device.
           getUserRecord(token.user.userId)
             .then((user) => {
               dispatch(setActiveUser(persistUserId(user)));
@@ -149,26 +155,48 @@ export default function LoginModal() {
               console.log(err);
             });
           return;
+        } else if (isUnsuccessfulLoginResponse(data)) {
+          const update = { ...loginFormStatus };
+          if (data.badField === 'password') {
+            update.password = {
+              ...update.password,
+              isBadInput: true,
+            };
+          } else {
+            update[data.badField] = {
+              badInputText: data.message,
+              isBadInput: true,
+            };
+          }
+          setLoginFormStatus(update);
+        } else {
+          throw new Error('Malformed Response');
+        }
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          dispatch(
+            setGlobalErrorMessage(
+              'An unknown error occured. Please try again later. \n\n'
+            )
+          );
+          navigation.navigate('GlobalErrorModal');
         }
 
-        const field = data.badField as keyof LoginFormStatus;
-        const update = { ...loginFormStatus };
-        if (field === 'password') {
-          update.password = {
-            ...update.password,
-            isBadInput: true,
-          };
+        const error = err as AxiosError;
+        if (error.response?.status && error.response?.status === 400) {
+          dispatch(
+            setGlobalErrorMessage(
+              (error.response?.data as { message: string }).message
+            )
+          );
         } else {
-          update[field] = {
-            badInputText: data.message,
-            isBadInput: true,
-          };
+          dispatch(
+            setGlobalErrorMessage(
+              'An error occured communicating with our servers. Please try again later. \n\n'
+            )
+          );
         }
-        setLoginFormStatus(update);
-      } catch (e) {
-        console.log(e);
-        setLoginFormStatus(defaultFormStatus);
-        dispatch(overlayErrorModal(true));
+        navigation.navigate('GlobalErrorModal');
       } finally {
         setLoading(false);
       }

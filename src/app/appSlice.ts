@@ -8,6 +8,7 @@ export interface AppState {
   refreshToken: string | null;
   activeUser: User | null;
   offlineMode: boolean;
+  globalErrorMessage: string| null
 }
 
 const initialState: AppState = {
@@ -15,6 +16,7 @@ const initialState: AppState = {
   refreshToken: null,
   activeUser: null,
   offlineMode: false,
+  globalErrorMessage: null
 };
 
 export const appSlice = createSlice({
@@ -42,6 +44,12 @@ export const appSlice = createSlice({
     ) => {
       state.offlineMode = action.payload;
     },
+    setGlobalErrorMessage: (
+      state,
+      action: PayloadAction<AppState["globalErrorMessage"]>
+    ) => {
+      state.globalErrorMessage = action.payload;
+    },
   },
 });
 
@@ -49,8 +57,9 @@ export const selectActiveUser = (state: RootState) => state.app.activeUser;
 export const selectAccessToken = (state: RootState) => state.app.accessToken;
 export const selectRefreshToken = (state: RootState) => state.app.refreshToken;
 export const selectOfflineMode = (state: RootState) => state.app.offlineMode;
+export const selectGlobalErrorMessage = (state: RootState) => state.app.globalErrorMessage;
 
 
-export const {setAccessToken, setActiveUser, setRefreshToken, setOfflineMode}  = appSlice.actions
+export const {setAccessToken, setActiveUser, setRefreshToken, setOfflineMode, setGlobalErrorMessage}  = appSlice.actions
 
 export default appSlice.reducer
