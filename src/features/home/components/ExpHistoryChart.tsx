@@ -13,7 +13,7 @@ import { getLevelExpParams, getSortedExpHistory } from '../queries';
 import { VictoryBar, VictoryAxis, VictoryChart } from 'victory-native';
 import Colors from '../../../common/constants/Colors';
 import useColorScheme from '../../../common/hooks/useColorScheme';
-import { selectExpHistory, setExpHistory } from '../homeSlice';
+import { setExpHistory } from '../homeSlice';
 
 type ChartDataObject = {
   x: number;
@@ -55,10 +55,10 @@ export function ExpHistoryChart() {
   const [chartParams, setChartParams] = useState<ChartParams>(intialParams);
   const [chartData, setChartData] =
     useState<Array<ChartDataObject>>(initialData);
+  const [hasHistory, setHasHistory] = useState<boolean>(false);
 
   const dispatch = useDispatch();
   const activeUser = useSelector(selectActiveUser);
-  const expHistory = useSelector(selectExpHistory);
   const theme = useColorScheme();
 
   useEffect(() => {
@@ -80,6 +80,9 @@ export function ExpHistoryChart() {
             tickValues: newChartInfo.tickValues,
           });
           setChartData(newChartInfo.data);
+          if (records.length > 0) {
+            setHasHistory(true);
+          }
         })
         .catch((err) => {
           console.log(err);
@@ -118,92 +121,82 @@ export function ExpHistoryChart() {
     };
   };
 
-  useEffect(() => {
-    if (chartParams && expHistory && expParams) {
-      setShowChart(true);
-    }
-  }, [expHistory, expParams, chartParams]);
-
   return (
     <ModalView style={styles.container}>
-      {showChart && (
-        <>
-          <View style={styles.title}>
-            <ThonburiBold>Daily Experience Summary</ThonburiBold>
-          </View>
-          {chartData && chartData.length > 0 && (
-            <View
-              style={styles.chart}
-              onLayout={(event) => {
-                setChartContainerLayout(event.nativeEvent.layout);
+      <View style={styles.title}>
+        <ThonburiBold>Daily Experience Summary</ThonburiBold>
+      </View>
+      {chartData && hasHistory && (
+        <View
+          style={styles.chart}
+          onLayout={(event) => {
+            setChartContainerLayout(event.nativeEvent.layout);
+          }}
+        >
+          <VictoryChart
+            domain={{
+              x: [0, MAX_HISTORY_DAYS + 1],
+              y: [chartParams.minY, chartParams.maxY],
+            }}
+            padding={10}
+            height={chartContainerLayout?.height}
+            width={chartContainerLayout?.width}
+          >
+            <VictoryBar
+              barWidth={7}
+              animate={{
+                onLoad: {
+                  duration: ANIMATION_DURATION,
+                },
               }}
-            >
-              <VictoryChart
-                domain={{
-                  x: [0, MAX_HISTORY_DAYS + 1],
-                  y: [chartParams.minY, chartParams.maxY],
-                }}
-                padding={10}
-                height={chartContainerLayout?.height}
-                width={chartContainerLayout?.width}
-              >
-                <VictoryBar
-                  barWidth={7}
-                  animate={{
-                    onLoad: {
-                      duration: ANIMATION_DURATION,
-                    },
-                  }}
-                  alignment="middle"
-                  cornerRadius={{ topLeft: 4, topRight: 4 }}
-                  data={chartData}
-                  style={{
-                    data: {
-                      fill: ({ datum }) => datum.fill,
-                    },
-                  }}
-                />
-                <VictoryAxis
-                  tickCount={MAX_HISTORY_DAYS + 2}
-                  tickValues={chartParams.tickValues}
-                  tickFormat={(t, i, ticks) => {
-                    if (i !== 0 && i !== ticks.length - 1) {
-                      return '';
-                    } else {
-                      return t;
-                    }
-                  }}
-                  invertAxis
-                  style={{
-                    axis: {
-                      stroke: Colors[theme].text,
-                      strokeWidth: 2,
-                    },
-                    tickLabels: {
-                      fill: Colors[theme].text,
-                    },
-                  }}
-                />
-              </VictoryChart>
-            </View>
-          )}
-          {chartData && chartData.length === 0 && (
-            <View style={styles.placeholderText}>
-              <ThonburiRegular>Time to get questing!</ThonburiRegular>
-            </View>
-          )}
-          <View style={styles.subTitle}>
-            <ThonburiLight style={{ fontSize: 12 }}>
-              {expParams &&
-                activeUser &&
-                expParams?.expNeeded -
-                  activeUser?.exp +
-                  ' to lvl ' +
-                  expParams.level}
-            </ThonburiLight>
-          </View>
-        </>
+              alignment="middle"
+              cornerRadius={{ topLeft: 4, topRight: 4 }}
+              data={chartData}
+              style={{
+                data: {
+                  fill: ({ datum }) => datum.fill,
+                },
+              }}
+            />
+            <VictoryAxis
+              tickCount={MAX_HISTORY_DAYS + 2}
+              tickValues={chartParams.tickValues}
+              tickFormat={(t, i, ticks) => {
+                if (i !== 0 && i !== ticks.length - 1) {
+                  return '';
+                } else {
+                  return t;
+                }
+              }}
+              invertAxis
+              style={{
+                axis: {
+                  stroke: Colors[theme].text,
+                  strokeWidth: 2,
+                },
+                tickLabels: {
+                  fill: Colors[theme].text,
+                },
+              }}
+            />
+          </VictoryChart>
+        </View>
       )}
+      {!hasHistory && (
+        <View style={styles.placeholderText}>
+          <ThonburiRegular>Time to get questing!</ThonburiRegular>
+        </View>
+      )}
+      <View style={styles.subTitle}>
+        <ThonburiLight style={{ fontSize: 12 }}>
+          {expParams &&
+            activeUser &&
+            expParams?.expNeeded -
+              activeUser?.exp +
+              ' to lvl ' +
+              expParams.level}
+        </ThonburiLight>
+      </View>
     </ModalView>
   );
 }
