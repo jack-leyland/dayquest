@@ -14,10 +14,8 @@ import {
   fetch as fetchNetInfo,
   NetInfoState,
 } from '@react-native-community/netinfo';
-import jwt from 'jwt-decode';
 
 import LevelUpIcon from '../../../../assets/noun-level-up.svg';
-import useLocalTokens from '../../../common/hooks/useLocalTokens';
 import { selectActiveModal, setDisplayedModal } from '../authSlice';
 import ActivityIndicatorLoader from '../../../common/components/ActivityIndicatorLoader';
 import SignInPicker from '../components/SignInPicker';
@@ -29,101 +27,71 @@ import {
   setOfflineMode,
   setRefreshToken,
 } from '../../../app/appSlice';
-import useLastUserId from '../../../common/hooks/useLastUserId';
 import { userDbProxy } from '../../../app/db';
-import { JWT, User } from '../../../app/types';
+import { User } from '../../../app/types';
 import { useNavigation } from '@react-navigation/native';
 import { RootNavigationProps } from '../../../common/navigation/types';
+import { clearLocalStorage } from '../util/clearLocalStorage';
+import { verifyUser } from '../util/verifyUser';
+import { fetchLocalUserData } from '../util/fetchLocalUserData';
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
   const fadeLoader = useRef(new Animated.Value(0)).current;
-  const [isAnimationComplete, setAnimationComplete] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
 
   const dispatch = useDispatch();
   const activeModal = useSelector(selectActiveModal);
-  const lastUserId = useLastUserId();
-  const lastUserTokens = useLocalTokens();
   const navigation = useNavigation<RootNavigationProps>(); 
 
-  // When animation finishes, check who the most recently logged in user was and
-  // fetch their record from the DB.
   useEffect(() => {
-    if (isAnimationComplete) {
-      if (!lastUserId) {
-        dispatch(setDisplayedModal('picker'));
-      } else {
-        const fetchUserFromDb = async () => {
-          try {
-            const user: User = await userDbProxy.getUserRecord(lastUserId);
-            setUser(user);
-          } catch (err) {
-            console.error(err);
+
+      const redirectOnLoggedInUser = async () => {
+        try {
+          const localUserData = await fetchLocalUserData()
+          const successfulVerification = await verifyUser(localUserData)
+          if (successfulVerification) {
+            const user: User = await userDbProxy.getUserRecord(localUserData.userId as string);
+            console.log("succesful verification")
+            dispatch(setActiveUser(user));
+  
+            if (user.isOfflineUser) {
+              dispatch(setDisplayedModal('picker'));
+              return
+            } 
+    
+            dispatch(setAccessToken(localUserData.access));
+            dispatch(setRefreshToken(localUserData.refresh));
+    
+            // Set initial connection state
+            try {
+              const connectionState: NetInfoState = await fetchNetInfo();
+              dispatch(setOfflineMode(!connectionState.isConnected))
+            } catch (err) {
+              dispatch(setOfflineMode(true))
+            }
+
+            navigation.navigate('TabNavigator');
+          } else {
+            clearLocalStorage()
             dispatch(setDisplayedModal('picker'));
           }
-        };
-        fetchUserFromDb();
-      }
-    }
-  }, [isAnimationComplete]);
+          
 
-  // When the user record is loaded, check for offline user flag,
-  // check that the stored tokens belong to the same user and then update appState and route accordingly.
-  useEffect(() => {
-    //testing bypass
-    //dispatch(setDisplayedModal('picker'));
-
-    if (user) {
-      dispatch(setActiveUser(user));
-      if (user.isOfflineUser) {
-        navigation.navigate('TabNavigator');
-      } else {
-        //If for whatever reason there aren't tokens in the keychain
-        if (!lastUserTokens.access || !lastUserTokens.refresh) {
+        } catch (err) {
+          clearLocalStorage()
           dispatch(setDisplayedModal('picker'));
-        } else {
-          handleAppInitialization(user);
         }
+        
       }
-    }
-  }, [user]);
-
-  const handleAppInitialization = async (user: User) => {
-    try {
-      const connectionState: NetInfoState = await fetchNetInfo();
-      if (!connectionState.isConnected) {
-        //TODO: Modal Notifying user about what happends when you're offline?
-        dispatch(setOfflineMode(true));
-        navigation.navigate('TabNavigator');
-      } else if (connectionState.isConnected) {
-        const access: JWT = jwt(lastUserTokens.access as string);
-        const refresh: JWT = jwt(lastUserTokens.refresh as string);
-        if (
-          access.user.userId != lastUserId ||
-          refresh.user.userId != lastUserId
-        ) {
-          dispatch(setDisplayedModal('picker'));
-        } else {
-          dispatch(setAccessToken(lastUserTokens.access));
-          dispatch(setRefreshToken(lastUserTokens.refresh));
-          dispatch(setActiveUser(user));
-          navigation.navigate('TabNavigator');
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+      redirectOnLoggedInUser()
+  }, []);
 
   const startAnimations = () => {
     Animated.timing(fadeLogo, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
-    }).start(() => {
-      setAnimationComplete(true);
-    });
+    }).start();
     Animated.timing(fadeLoader, {
       toValue: 1,
       duration: 2000,

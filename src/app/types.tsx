@@ -16,3 +16,9 @@ export type JWT = {
     username: string;
   };
 };
+
+export type LocalUserData = {
+  access: string | null
+  refresh: string | null
+  userId: string | null 
+}

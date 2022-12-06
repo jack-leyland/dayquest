@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import { LoginAPIResponse, SuccessfulLoginAPIResponse } from "../types";
+import { SuccessfulLoginAPIResponse } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../../../app/types";
 

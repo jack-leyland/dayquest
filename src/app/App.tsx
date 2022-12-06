@@ -19,7 +19,7 @@ function App() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
-    databaseInterface.initializeDatabase();
+    databaseInterface.initializeDatabase()
   }, []);
 
   if (!isDataLoaded) {

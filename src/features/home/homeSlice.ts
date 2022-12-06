@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
-import { ExpHistoryRecord } from "../../app/types";
+import { ExpHistoryRecord } from "./types";
 
 export interface HomeState {
   expHistory: Array<ExpHistoryRecord> | null;

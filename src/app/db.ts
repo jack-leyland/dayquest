@@ -36,6 +36,45 @@ export class DatabaseInterface {
       })
     })
   }
+
+  //Dev only 
+  drop() {
+    return new Promise<void>((resolve, reject) => {
+      this.connection.transaction(
+          (tx) => {
+            tx.executeSql(
+              `DROP TABLE IF EXISTS expHistory`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS questCategories`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS objectiveTypes`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS levelExpParams`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS quests`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS objectives`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS events`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS objectiveProgressHistory`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS users`
+            );
+            tx.executeSql(
+              `DROP TABLE IF EXISTS expHistory`
+            );
+          },(err)=>{console.log(err)},()=>{console.log("Table Dropped")})
+    })
+  }
 }
 
 // Class for interaction with the User data
@@ -71,7 +110,7 @@ class UserDbProxy {
       this.db.connection.transaction(
         (tx) => {
           tx.executeSql(
-            "INSERT INTO users VALUES (?,?,?,?,?,?,?)",
+            "INSERT INTO users VALUES (?,?,?,?,?,?,?,?)",
             [
               user.userId,
               user.username,
@@ -80,6 +119,7 @@ class UserDbProxy {
               user.isOfflineUser ? 1 : 0,
               user.level,
               user.exp,
+              1
             ],
             () => {
               resolve(user);
@@ -92,6 +132,23 @@ class UserDbProxy {
       );
     });
   };
+
+  userExists(userId: string): Promise<0|1> {
+    return new Promise((resolve, reject) => {
+      this.db.connection.transaction((tx) => {
+        tx.executeSql(`SELECT EXISTS(SELECT 1 FROM users WHERE userId=?) AS "success"`,
+        [userId],
+        (_, { rows: { _array } }) => {
+          resolve(_array[0]["success"]);
+        }
+        )
+      },
+      (err) => {
+        reject(err);
+      }
+      )
+    })
+  }
 }
 
 export const databaseInterface = new DatabaseInterface()

@@ -6,7 +6,8 @@ export const Tables = [
         "device" TEXT NOT NULL,
         "isOfflineUser" INTEGER NOT NULL DEFAULT 0 CHECK ("isOfflineUser" IN (0,1)),
         "level" INTEGER NOT NULL DEFAULT 1,
-        "exp" INTEGER NOT NULL DEFAULT 0
+        "exp" INTEGER NOT NULL DEFAULT 0,
+        "active" INTEGER NOT NULL DEFAULT 1 CHECK ("active" IN (0,1))
     );`,
     `CREATE TABLE IF NOT EXISTS "questCategories" (
         "catId" INTEGER PRIMARY KEY,
