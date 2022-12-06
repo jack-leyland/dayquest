@@ -15,7 +15,6 @@ import Colors from '../../../common/constants/Colors';
 import Layout from '../../../common/constants/Layout';
 import GrowingBottomTray from '../../../common/components/GrowingBottomTray';
 import {
-  overlayErrorModal,
   selectPreviousModalHeight,
   setDisplayedModal,
   setPreviousModalHeight,
@@ -50,7 +49,7 @@ import {
 } from '../../../app/appSlice';
 import { JWT, User } from '../../../app/types';
 import useDeviceId from '../../../common/hooks/useDeviceId';
-import { saveNewUserRecord } from '../../../app/db';
+import { userDbProxy } from '../../../app/db';
 import { useNavigation } from '@react-navigation/native';
 import { RootNavigationProps } from '../../../common/navigation/types';
 
@@ -217,7 +216,7 @@ export default function RegistrationModal() {
             exp: 0,
           };
 
-          saveNewUserRecord(user)
+          userDbProxy.saveNewUserRecord(user)
             .then((user) => {
               dispatch(setActiveUser(persistUserId(user)));
               setSuccess(true);

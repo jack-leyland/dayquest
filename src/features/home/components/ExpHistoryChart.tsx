@@ -9,7 +9,7 @@ import {
 import { ModalView } from '../../../common/components/Themed';
 import { selectActiveUser } from '../../../app/appSlice';
 import { ExpHistoryRecord, LevelExpParams } from '../types';
-import { getLevelExpParams, getSortedExpHistory } from '../queries';
+import { homeDbProxy } from '../homeDbProxy';
 import { VictoryBar, VictoryAxis, VictoryChart } from 'victory-native';
 import Colors from '../../../common/constants/Colors';
 import useColorScheme from '../../../common/hooks/useColorScheme';
@@ -63,14 +63,14 @@ export function ExpHistoryChart() {
 
   useEffect(() => {
     if (activeUser) {
-      getLevelExpParams(activeUser.level + 1)
+      homeDbProxy.getLevelExpParams(activeUser.level + 1)
         .then((params) => {
           setExpParams(params);
         })
         .catch((err) => {
           console.log(err);
         });
-      getSortedExpHistory(MAX_HISTORY_DAYS)
+        homeDbProxy.getSortedExpHistory(MAX_HISTORY_DAYS)
         .then((records) => {
           dispatch(setExpHistory(records));
           let newChartInfo = composeChartInfo(records);

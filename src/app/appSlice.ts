@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import App from "./App";
 import { RootState } from "./store";
 import { User } from "./types";
 
@@ -16,7 +15,7 @@ const initialState: AppState = {
   refreshToken: null,
   activeUser: null,
   offlineMode: false,
-  globalErrorMessage: null
+  globalErrorMessage: null,
 };
 
 export const appSlice = createSlice({

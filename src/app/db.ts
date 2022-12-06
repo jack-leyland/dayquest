@@ -1,61 +1,103 @@
 import * as SQLite from "expo-sqlite";
 import { User } from "./types";
+import { Tables } from "../common/constants/Tables"
 
-export const openDB = (): SQLite.WebSQLDatabase => {
-  const db = SQLite.openDatabase("dayquest.db");
-  return db;
-};
+// This file exports a base class instance that can be imported into the respective files defining classes for 
+// database interaction at the feature-level
 
-export const getUserRecord = (userId: string): Promise<User> => {
-  const db = openDB();
-  return new Promise((resolve, reject) => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          "SELECT * FROM users WHERE userId=?",
-          [userId],
-          (_, { rows: { _array } }) => {
-            resolve(_array[0] as User);
-          }
-        );
-      },
-      (err) => {
-        reject(err);
-      }
-    );
-  });
-};
 
-export const saveNewUserRecord = (user: User): Promise<User> => {
-  const db = openDB();
-  return new Promise((resolve, reject) => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          "INSERT INTO users VALUES (?,?,?,?,?,?,?)",
-          [
-            user.userId,
-            user.username,
-            user.email,
-            user.deviceId,
-            user.isOfflineUser ? 1 : 0,
-            user.level,
-            user.exp,
-          ],
-          () => {
-            resolve(user);
-          }
-        );
-      },
-      (err) => {
-        reject(err);
-      }
-    );
-  });
-};
+// Base class providing an interface to interact with the local SQLite database instance for the app.
+// Each feature of the app implements their own database class using the composition pattern, taking this class
+// as an argument. The feature database classes contain the specific queries needed by the feature as methods.
 
-export const buildDatabase = (): void => {
-  const db = openDB();
+// A database connection is opened when the object is created. We rely on the garbage collector to close the connection.
+
+// Query methods should return promises to the caller.
+
+export class DatabaseInterface {
+
+  connection: SQLite.WebSQLDatabase
+
+  constructor() {
+    this.connection = SQLite.openDatabase("dayquest.db");
+  }
+
+  initializeDatabase(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.connection.transaction((tx) => {
+        for (let i = 0; i < Tables.length; i++){
+          tx.executeSql(Tables[i])
+        }
+      },(err) => {
+        console.error("Database initialization failure: ", err)
+        reject(err)
+      }, () => {
+        resolve()
+      })
+    })
+  }
+}
+
+// Class for interaction with the User data
+
+class UserDbProxy {
+
+  db: DatabaseInterface
+  constructor(db: DatabaseInterface) {
+    this.db = db
+  }
+
+  getUserRecord(userId: string): Promise<User> {
+    return new Promise((resolve, reject) => {
+      this.db.connection.transaction(
+        (tx) => {
+          tx.executeSql(
+            "SELECT * FROM users WHERE userId=?",
+            [userId],
+            (_, { rows: { _array } }) => {
+              resolve(_array[0] as User);
+            }
+          );
+        },
+        (err) => {
+          reject(err);
+        }
+      );
+    });
+  };
+
+  saveNewUserRecord(user: User): Promise<User> {
+    return new Promise((resolve, reject) => {
+      this.db.connection.transaction(
+        (tx) => {
+          tx.executeSql(
+            "INSERT INTO users VALUES (?,?,?,?,?,?,?)",
+            [
+              user.userId,
+              user.username,
+              user.email,
+              user.deviceId,
+              user.isOfflineUser ? 1 : 0,
+              user.level,
+              user.exp,
+            ],
+            () => {
+              resolve(user);
+            }
+          );
+        },
+        (err) => {
+          reject(err);
+        }
+      );
+    });
+  };
+}
+
+export const databaseInterface = new DatabaseInterface()
+export const userDbProxy = new UserDbProxy(databaseInterface)
+
+
   // db.transaction(
   //   (tx) => {
   //     tx.executeSql(
@@ -89,114 +131,3 @@ export const buildDatabase = (): void => {
   //       `DROP TABLE IF EXISTS expHistory`
   //     );
   //   },(err)=>{console.log(err)},()=>{console.log("Table Dropped")})
-
-  db.transaction(
-    (tx) => {
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "users" (
-            "userId" TEXT PRIMARY KEY,
-            "username" TEXT NOT NULL,
-            "email" TEXT NOT NULL,
-            "device" TEXT NOT NULL,
-            "isOfflineUser" INTEGER NOT NULL DEFAULT 0 CHECK ("isOfflineUser" IN (0,1)),
-            "level" INTEGER NOT NULL DEFAULT 1,
-            "exp" INTEGER NOT NULL DEFAULT 0
-        );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "questCategories" (
-            "catId" INTEGER PRIMARY KEY,
-            "name" TEXT UNIQUE NOT NULL,
-            "desc" TEXT
-        );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "objectiveTypes" (
-            "typeId" INTEGER PRIMARY KEY,
-            "name" TEXT UNIQUE NOT NULL,
-            "desc" TEXT
-        );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "levelExpParams" (
-            "level" INTEGER PRIMARY KEY,
-            "expNeeded" INTEGER NOT NULL,
-            "expPerCompletion" INTEGER NOT NULL
-        );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "quests" (
-            "questId" INTEGER,
-            "userId" TEXT NOT NULL,
-            "categoryId" INTEGER NOT NULL,
-            "active" INTEGER NOT NULL CHECK ("active" IN (0,1)),
-            "startDateUtc" TEXT NOT NULL,
-            "endDateUtc" TEXT NOT NULL,
-            "isPriority" INTEGER NOT NULL DEFAULT 0 CHECK ("isPriority" IN (0,1)),
-            FOREIGN KEY ("categoryId") REFERENCES "questCategories" ("catId"),
-            CONSTRAINT "userId"
-              FOREIGN KEY ("userId") 
-              REFERENCES "users" ("userId")
-              ON DELETE CASCADE,
-            PRIMARY KEY ("questId", "userId")
-        );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "objectives" (
-            "objectiveId" INTEGER PRIMARY KEY AUTOINCREMENT,
-            "questId" INTEGER NOT NULL,
-            "typeId" INTEGER NOT NULL,
-            "userId" TEXT NOT NULL,
-            "name" TEXT NOT NULL,
-            "desc" TEXT,
-            "active" INTEGER NOT NULL,
-            "enforcementActive" INTEGER NOT NULL DEFAULT 0 CHECK ("enforcementActive" IN (0,1)),
-            "startDateUtc" TEXT NOT NULL,
-            "endDateUtc" TEXT NOT NULL,
-            "isRecurring" INTEGER NOT NULL CHECK ("isRecurring" IN (0,1)),
-            "hasTime" INTEGER NOT NULL DEFAULT 0 CHECK ("hasTime" IN (0,1)),
-            "hasLocation" INTEGER NOT NULL DEFAULT 0 CHECK ("hasLocation" IN (0,1)),
-            "timeRangeStart" TEXT,
-            "timeRangeEnd" TEXT,
-            "recurrencePattern" TEXT,
-            "completionStreak" INTEGER,
-            "missStreak" INTEGER,
-            FOREIGN KEY ("typeId") REFERENCES "objectiveTypes" ("typeId"),
-            CONSTRAINT "userId"
-              FOREIGN KEY ("userId") 
-              REFERENCES "users" ("userId")
-              ON DELETE CASCADE,
-            CONSTRAINT "questId"
-              FOREIGN KEY ("questId") 
-              REFERENCES "quests" ("questId")
-              ON DELETE CASCADE,
-            UNIQUE ("objectiveId", "userId")
-        );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "objectiveProgressHistory" (
-            "id" INTEGER PRIMARY KEY,
-            "objectiveId" INTEGER NOT NULL,
-            "recordedOn" TEXT NOT NULL,
-            "successfulCompletion" INTEGER NOT NULL,
-            "expChange" INTEGER NOT NULL
-          );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "expHistory" (
-            "userId" TEXT NOT NULL,
-            "timestamp" TEXT NOT NULL,
-            "expChange" INTEGER NOT NULL,
-            CONSTRAINT "userId"
-              FOREIGN KEY ("userId") 
-              REFERENCES "userId" ("userId")
-              ON DELETE CASCADE,
-            PRIMARY KEY ("userId", "timestamp")
-          );`
-      );
-    },
-    (err) => {
-      console.log(err);
-    }
-  );
-};

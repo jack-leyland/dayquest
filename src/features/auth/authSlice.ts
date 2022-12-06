@@ -8,7 +8,6 @@ export interface AuthState {
   refreshToken: string | null;
   activeUserId: string | null;
   previousModalHeight: number;
-  overlayErrorMessage: string | null;
 }
 
 const initialState: AuthState = {
@@ -18,8 +17,6 @@ const initialState: AuthState = {
   refreshToken: null,
   activeUserId: null,
   previousModalHeight: 0,
-  overlayErrorMessage:
-    "This usually happens when there's a problem with our servers, or you are not connected to the internet.\n\nPlease try again a little bit later!",
 };
 
 export const authSlice = createSlice({
@@ -44,12 +41,6 @@ export const authSlice = createSlice({
     ) => {
       state.previousModalHeight = action.payload;
     },
-    setOverlayErrorMessage: (
-      state,
-      action: PayloadAction<AuthState["overlayErrorMessage"]>
-    ) => {
-      state.overlayErrorMessage = action.payload;
-    },
   },
 });
 
@@ -58,14 +49,11 @@ export const renderErrorModal = (state: RootState) =>
 export const selectActiveModal = (state: RootState) => state.auth.modalToRender;
 export const selectPreviousModalHeight = (state: RootState) =>
   state.auth.previousModalHeight;
-export const selectOverlayErrorMessage = (state: RootState) =>
-  state.auth.overlayErrorMessage;
 
 export const {
   setDisplayedModal,
   setPreviousModalHeight,
   overlayErrorModal,
-  setOverlayErrorMessage,
 } = authSlice.actions;
 
 export default authSlice.reducer;

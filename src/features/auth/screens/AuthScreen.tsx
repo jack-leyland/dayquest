@@ -30,7 +30,7 @@ import {
   setRefreshToken,
 } from '../../../app/appSlice';
 import useLastUserId from '../../../common/hooks/useLastUserId';
-import { getUserRecord } from '../../../app/db';
+import { userDbProxy } from '../../../app/db';
 import { JWT, User } from '../../../app/types';
 import { useNavigation } from '@react-navigation/native';
 import { RootNavigationProps } from '../../../common/navigation/types';
@@ -45,7 +45,7 @@ export default function AuthScreen() {
   const activeModal = useSelector(selectActiveModal);
   const lastUserId = useLastUserId();
   const lastUserTokens = useLocalTokens();
-  const navigation = useNavigation<RootNavigationProps>();
+  const navigation = useNavigation<RootNavigationProps>(); 
 
   // When animation finishes, check who the most recently logged in user was and
   // fetch their record from the DB.
@@ -56,11 +56,10 @@ export default function AuthScreen() {
       } else {
         const fetchUserFromDb = async () => {
           try {
-            const user = await getUserRecord(lastUserId);
+            const user: User = await userDbProxy.getUserRecord(lastUserId);
             setUser(user);
           } catch (err) {
-            console.log(err);
-            //This means an SQL error. Send back to login screen.
+            console.error(err);
             dispatch(setDisplayedModal('picker'));
           }
         };
@@ -73,20 +72,21 @@ export default function AuthScreen() {
   // check that the stored tokens belong to the same user and then update appState and route accordingly.
   useEffect(() => {
     //testing bypass
-    dispatch(setDisplayedModal('picker'));
-    // if (user) {
-    //   dispatch(setActiveUser(user));
-    //   if (user.isOfflineUser) {
-    //     navigation.navigate('TabNavigator');
-    //   } else {
-    //     //If for whatever reason there aren't tokens in the keychain
-    //     if (!lastUserTokens.access || !lastUserTokens.refresh) {
-    //       dispatch(setDisplayedModal('picker'));
-    //     } else {
-    //       handleAppInitialization(user);
-    //     }
-    //   }
-    // }
+    //dispatch(setDisplayedModal('picker'));
+
+    if (user) {
+      dispatch(setActiveUser(user));
+      if (user.isOfflineUser) {
+        navigation.navigate('TabNavigator');
+      } else {
+        //If for whatever reason there aren't tokens in the keychain
+        if (!lastUserTokens.access || !lastUserTokens.refresh) {
+          dispatch(setDisplayedModal('picker'));
+        } else {
+          handleAppInitialization(user);
+        }
+      }
+    }
   }, [user]);
 
   const handleAppInitialization = async (user: User) => {

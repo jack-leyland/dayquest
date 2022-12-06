@@ -2,14 +2,14 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { registerRootComponent } from 'expo';
-import { Provider, useSelector } from 'react-redux';
+import { Provider } from 'react-redux';
 import { useEffect } from 'react';
 
 import useCachedResources from '../common/hooks/useCachedResources';
 import useColorScheme from '../common/hooks/useColorScheme';
 import Navigation from '../common/navigation';
 import store from './store';
-import { buildDatabase } from './db';
+import { databaseInterface } from './db';
 
 //NOTE: AuthScreen component will disable splash screen once background PNG has fully loaded.
 SplashScreen.preventAutoHideAsync();
@@ -19,7 +19,7 @@ function App() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
-    buildDatabase();
+    databaseInterface.initializeDatabase();
   }, []);
 
   if (!isDataLoaded) {

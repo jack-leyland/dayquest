@@ -45,7 +45,7 @@ import {
   setRefreshToken,
 } from '../../../app/appSlice';
 import { JWT } from '../../../app/types';
-import { getUserRecord } from '../../../app/db';
+import { userDbProxy } from '../../../app/db';
 import useDeviceId from '../../../common/hooks/useDeviceId';
 import { useNavigation } from '@react-navigation/native';
 import { RootNavigationProps } from '../../../common/navigation/types';
@@ -146,7 +146,7 @@ export default function LoginModal() {
           const token: JWT = jwt(data.access as string);
 
           //TODO: Handle existing user login on new device.
-          getUserRecord(token.user.userId)
+          userDbProxy.getUserRecord(token.user.userId)
             .then((user) => {
               dispatch(setActiveUser(persistUserId(user)));
               navigation.navigate('TabNavigator');
