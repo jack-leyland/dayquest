@@ -61,10 +61,48 @@ export const buildDatabase = (): void => {
   //     tx.executeSql(
   //       `DROP TABLE IF EXISTS expHistory`
   //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS questCategories`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS objectiveTypes`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS levelExpParams`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS quests`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS objectives`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS events`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS objectiveProgressHistory`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS users`
+  //     );
+  //     tx.executeSql(
+  //       `DROP TABLE IF EXISTS expHistory`
+  //     );
   //   },(err)=>{console.log(err)},()=>{console.log("Table Dropped")})
 
   db.transaction(
     (tx) => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS "users" (
+            "userId" TEXT PRIMARY KEY,
+            "username" TEXT NOT NULL,
+            "email" TEXT NOT NULL,
+            "device" TEXT NOT NULL,
+            "isOfflineUser" INTEGER NOT NULL DEFAULT 0 CHECK ("isOfflineUser" IN (0,1)),
+            "level" INTEGER NOT NULL DEFAULT 1,
+            "exp" INTEGER NOT NULL DEFAULT 0
+        );`
+      );
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "questCategories" (
             "catId" INTEGER PRIMARY KEY,
@@ -95,14 +133,17 @@ export const buildDatabase = (): void => {
             "startDateUtc" TEXT NOT NULL,
             "endDateUtc" TEXT NOT NULL,
             "isPriority" INTEGER NOT NULL DEFAULT 0 CHECK ("isPriority" IN (0,1)),
-            FOREIGN KEY ("categoryId") REFERENCES "questCategories" ("catId")
-            FOREIGN KEY ("userId") REFERENCES "userId" ("userId")
+            FOREIGN KEY ("categoryId") REFERENCES "questCategories" ("catId"),
+            CONSTRAINT "userId"
+              FOREIGN KEY ("userId") 
+              REFERENCES "users" ("userId")
+              ON DELETE CASCADE,
             PRIMARY KEY ("questId", "userId")
         );`
       );
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "objectives" (
-            "id" INTEGER,
+            "objectiveId" INTEGER PRIMARY KEY AUTOINCREMENT,
             "questId" INTEGER NOT NULL,
             "typeId" INTEGER NOT NULL,
             "userId" TEXT NOT NULL,
@@ -120,39 +161,36 @@ export const buildDatabase = (): void => {
             "recurrencePattern" TEXT,
             "completionStreak" INTEGER,
             "missStreak" INTEGER,
-            FOREIGN KEY ("questId") REFERENCES "quests" ("questId"),
-            FOREIGN KEY ("typeId") REFERENCES "objectiveTypes" ("typeId")
-            FOREIGN KEY ("userId") REFERENCES "userId" ("userId")
-            PRIMARY KEY ("id", "userId")
+            FOREIGN KEY ("typeId") REFERENCES "objectiveTypes" ("typeId"),
+            CONSTRAINT "userId"
+              FOREIGN KEY ("userId") 
+              REFERENCES "users" ("userId")
+              ON DELETE CASCADE,
+            CONSTRAINT "questId"
+              FOREIGN KEY ("questId") 
+              REFERENCES "quests" ("questId")
+              ON DELETE CASCADE,
+            UNIQUE ("objectiveId", "userId")
         );`
       );
       tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "events" (
-            "eventId" INTEGER PRIMARY KEY,
+        `CREATE TABLE IF NOT EXISTS "objectiveProgressHistory" (
+            "id" INTEGER PRIMARY KEY,
             "objectiveId" INTEGER NOT NULL,
-            "recordedOn" INTEGER NOT NULL,
+            "recordedOn" TEXT NOT NULL,
             "successfulCompletion" INTEGER NOT NULL,
-            "expChange" INTEGER NOT NULL,
-            FOREIGN KEY ("objectiveId") REFERENCES "objectives" ("id")
+            "expChange" INTEGER NOT NULL
           );`
-      );
-      tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS "users" (
-            "userId" TEXT PRIMARY KEY,
-            "username" TEXT NOT NULL,
-            "email" TEXT NOT NULL,
-            "device" TEXT NOT NULL,
-            "isOfflineUser" INTEGER NOT NULL DEFAULT 0 CHECK ("isOfflineUser" IN (0,1)),
-            "level" INTEGER NOT NULL DEFAULT 1,
-            "exp" INTEGER NOT NULL DEFAULT 0
-        );`
       );
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS "expHistory" (
             "userId" TEXT NOT NULL,
             "timestamp" TEXT NOT NULL,
             "expChange" INTEGER NOT NULL,
-            FOREIGN KEY ("userId") REFERENCES "userId" ("userId"),
+            CONSTRAINT "userId"
+              FOREIGN KEY ("userId") 
+              REFERENCES "userId" ("userId")
+              ON DELETE CASCADE,
             PRIMARY KEY ("userId", "timestamp")
           );`
       );
