@@ -1,5 +1,5 @@
 import * as SQLite from "expo-sqlite";
-import { User } from "./types";
+import { User } from "../common/types";
 import { Tables } from "../common/constants/Tables"
 
 // This file exports a base class instance that can be imported into the respective files defining classes for 
@@ -142,6 +142,20 @@ class UserDbProxy {
           resolve(_array[0]["success"]);
         }
         )
+      },
+      (err) => {
+        reject(err);
+      }
+      )
+    })
+  }
+
+  setUserInactive(userId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.connection.transaction((tx) => {
+        tx.executeSql(`UPDATE users SET active=0 WHERE userId=?`),
+        [userId], 
+        () => resolve()
       },
       (err) => {
         reject(err);

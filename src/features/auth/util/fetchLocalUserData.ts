@@ -1,4 +1,4 @@
-import { LocalUserData } from "../../../app/types";
+import { LocalUserData } from "../../../common/types";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 

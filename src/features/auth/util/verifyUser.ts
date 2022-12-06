@@ -1,5 +1,5 @@
 import { userDbProxy } from "../../../app/db";
-import { JWT, LocalUserData, } from "../../../app/types";
+import { JWT, LocalUserData, } from "../../../common/types";
 import jwt from "jwt-decode";
 
 // This function performs the logic necessary to validate all requirements are met

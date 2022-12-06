@@ -22,3 +22,7 @@ export type LocalUserData = {
   refresh: string | null
   userId: string | null 
 }
+
+export type UserExistsAPIReponse = {
+  exists: boolean
+}

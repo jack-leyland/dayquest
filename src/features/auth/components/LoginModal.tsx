@@ -44,7 +44,7 @@ import {
   setGlobalErrorMessage,
   setRefreshToken,
 } from '../../../app/appSlice';
-import { JWT } from '../../../app/types';
+import { JWT } from '../../../common/types';
 import { userDbProxy } from '../../../app/db';
 import useDeviceId from '../../../common/hooks/useDeviceId';
 import { useNavigation } from '@react-navigation/native';

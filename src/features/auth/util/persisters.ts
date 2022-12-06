@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { SuccessfulLoginAPIResponse } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from "../../../app/types";
+import { User } from "../../../common/types";
 
 // NOTE: These functions will eventually be replaced with react-thunk once the application is more mature.
 

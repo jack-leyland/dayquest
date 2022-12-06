@@ -28,12 +28,13 @@ import {
   setRefreshToken,
 } from '../../../app/appSlice';
 import { userDbProxy } from '../../../app/db';
-import { User } from '../../../app/types';
+import { User, UserExistsAPIReponse } from '../../../common/types';
 import { useNavigation } from '@react-navigation/native';
 import { RootNavigationProps } from '../../../common/navigation/types';
 import { clearLocalStorage } from '../util/clearLocalStorage';
 import { verifyUser } from '../util/verifyUser';
 import { fetchLocalUserData } from '../util/fetchLocalUserData';
+import userServer from '../../../app/userServer';
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
@@ -51,7 +52,6 @@ export default function AuthScreen() {
           const successfulVerification = await verifyUser(localUserData)
           if (successfulVerification) {
             const user: User = await userDbProxy.getUserRecord(localUserData.userId as string);
-            console.log("succesful verification")
             dispatch(setActiveUser(user));
   
             if (user.isOfflineUser) {
@@ -65,11 +65,39 @@ export default function AuthScreen() {
             // Set initial connection state
             try {
               const connectionState: NetInfoState = await fetchNetInfo();
-              dispatch(setOfflineMode(!connectionState.isConnected))
+
+              //if connected, ask API if the user has been deleted from another device
+              if (connectionState.isConnected) {
+
+                try {
+                  const res = await userServer.get(`/${user.userId}`)
+                  const isActive = (res.data as UserExistsAPIReponse).exists
+
+                  if (isActive) {
+                    dispatch(setOfflineMode(false))
+                  } else {
+                    userDbProxy.setUserInactive(user.userId)
+                    clearLocalStorage()
+                    dispatch(setDisplayedModal('picker'));
+                    return 
+                  }
+
+                } catch (err) {
+
+                  console.log(err)
+                  clearLocalStorage()
+                  dispatch(setDisplayedModal('picker'));
+                  return
+                }
+
+                
+              } else {
+                dispatch(setOfflineMode(true))
+              }
             } catch (err) {
+              console.log(err)
               dispatch(setOfflineMode(true))
             }
-
             navigation.navigate('TabNavigator');
           } else {
             clearLocalStorage()

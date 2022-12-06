@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import { useEffect, useState } from 'react';
-import { User } from '../../app/types';
+import { User } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {v4 as uuidv4} from "uuid"
 
