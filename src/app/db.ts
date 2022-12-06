@@ -91,7 +91,7 @@ class UserDbProxy {
       this.db.connection.transaction(
         (tx) => {
           tx.executeSql(
-            "SELECT * FROM users WHERE userId=?",
+            "SELECT * FROM users WHERE userId=? AND active=1",
             [userId],
             (_, { rows: { _array } }) => {
               resolve(_array[0] as User);
@@ -136,7 +136,7 @@ class UserDbProxy {
   userExists(userId: string): Promise<0|1> {
     return new Promise((resolve, reject) => {
       this.db.connection.transaction((tx) => {
-        tx.executeSql(`SELECT EXISTS(SELECT 1 FROM users WHERE userId=?) AS "success"`,
+        tx.executeSql(`SELECT EXISTS(SELECT 1 FROM users WHERE userId=? AND active=1) AS "success"`,
         [userId],
         (_, { rows: { _array } }) => {
           resolve(_array[0]["success"]);
