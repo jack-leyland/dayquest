@@ -194,9 +194,7 @@ export default function RegistrationModal() {
 
     const sendPayload = async () => {
       try {
-        const res = await authServer.post('/register', registrationPayload, {
-          headers: { device: deviceId },
-        });
+        const res = await authServer.post('/register', registrationPayload);
         const data = res.data as RegistrationAPIResponse;
 
         if (data.success && isSuccessfulRegistrationResponse(data)) {

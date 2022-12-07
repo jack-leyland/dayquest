@@ -6,35 +6,35 @@ import {
   Text,
   Keyboard,
   TouchableWithoutFeedback,
-} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useEffect, useRef, useState } from 'react';
-import * as SplashScreen from 'expo-splash-screen';
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useRef, useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
 import {
   fetch as fetchNetInfo,
   NetInfoState,
-} from '@react-native-community/netinfo';
+} from "@react-native-community/netinfo";
 
-import LevelUpIcon from '../../../../assets/noun-level-up.svg';
-import { selectActiveModal, setDisplayedModal } from '../authSlice';
-import ActivityIndicatorLoader from '../../../common/components/ActivityIndicatorLoader';
-import SignInPicker from '../components/SignInPicker';
-import RegistrationModal from '../components/RegistrationModal';
-import LoginModal from '../components/LoginModal';
+import LevelUpIcon from "../../../../assets/noun-level-up.svg";
+import { selectActiveModal, setDisplayedModal } from "../authSlice";
+import ActivityIndicatorLoader from "../../../common/components/ActivityIndicatorLoader";
+import SignInPicker from "../components/SignInPicker";
+import RegistrationModal from "../components/RegistrationModal";
+import LoginModal from "../components/LoginModal";
 import {
   setAccessToken,
   setActiveUser,
   setOfflineMode,
   setRefreshToken,
-} from '../../../app/appSlice';
-import { userDbProxy } from '../../../app/db';
-import { User, UserExistsAPIReponse } from '../../../common/types';
-import { useNavigation } from '@react-navigation/native';
-import { RootNavigationProps } from '../../../common/navigation/types';
-import { clearLocalStorage } from '../util/clearLocalStorage';
-import { verifyUser } from '../util/verifyUser';
-import { fetchLocalUserData } from '../util/fetchLocalUserData';
-import userServer from '../../../app/userServer';
+} from "../../../app/appSlice";
+import { userDbProxy } from "../../../app/db";
+import { GetUserAPIReponse, User} from "../../../common/types";
+import { useNavigation } from "@react-navigation/native";
+import { RootNavigationProps } from "../../../common/navigation/types";
+import { clearLocalStorage } from "../../../common/util/clearLocalStorage";
+import { verifyUser } from "../util/verifyUser";
+import userServer from "../../../app/userServer";
+import { fetchLocalUserData } from "../../../common/util/fetchLocalUserData";
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
@@ -42,76 +42,71 @@ export default function AuthScreen() {
 
   const dispatch = useDispatch();
   const activeModal = useSelector(selectActiveModal);
-  const navigation = useNavigation<RootNavigationProps>(); 
+  const navigation = useNavigation<RootNavigationProps>();
 
   useEffect(() => {
+    const redirectOnLoggedInUser = async () => {
+      try {
+        const localUserData = await fetchLocalUserData();
+        const successfulVerification = await verifyUser(localUserData);
+        if (!successfulVerification) {
+          clearLocalStorage();
+          dispatch(setDisplayedModal("picker"));
+          return;
+        }
+        const user: User = await userDbProxy.getUserRecord(
+          localUserData.userId as string
+        );
+        dispatch(setActiveUser(user));
 
-      const redirectOnLoggedInUser = async () => {
+        if (user.isOfflineUser) {
+          dispatch(setDisplayedModal("picker"));
+          return;
+        }
+
+        //NOTE: Unclear whether this needs to be in Redux or not.
+        dispatch(setAccessToken(localUserData.access));
+        dispatch(setRefreshToken(localUserData.refresh));
+
+        // Set initial connection state
         try {
-          const localUserData = await fetchLocalUserData()
-          const successfulVerification = await verifyUser(localUserData)
-          if (successfulVerification) {
-            const user: User = await userDbProxy.getUserRecord(localUserData.userId as string);
-            dispatch(setActiveUser(user));
-  
-            if (user.isOfflineUser) {
-              dispatch(setDisplayedModal('picker'));
-              return
-            } 
-    
-            dispatch(setAccessToken(localUserData.access));
-            dispatch(setRefreshToken(localUserData.refresh));
-    
-            // Set initial connection state
+          const connectionState: NetInfoState = await fetchNetInfo();
+
+          //if connected, ask API if the user has been deleted from another device
+          if (connectionState.isConnected) {
             try {
-              const connectionState: NetInfoState = await fetchNetInfo();
+              const res = await userServer.get(`/${user.userId}`);
+              const isActive = (res.data as GetUserAPIReponse).exists;
 
-              //if connected, ask API if the user has been deleted from another device
-              if (connectionState.isConnected) {
-
-                try {
-                  const res = await userServer.get(`/${user.userId}`)
-                  const isActive = (res.data as UserExistsAPIReponse).exists
-
-                  if (isActive) {
-                    dispatch(setOfflineMode(false))
-                  } else {
-                    userDbProxy.setUserInactive(user.userId)
-                    clearLocalStorage()
-                    dispatch(setDisplayedModal('picker'));
-                    return 
-                  }
-
-                } catch (err) {
-
-                  console.log(err)
-                  clearLocalStorage()
-                  dispatch(setDisplayedModal('picker'));
-                  return
-                }
-
-                
+              if (isActive) {
+                dispatch(setOfflineMode(false));
               } else {
-                dispatch(setOfflineMode(true))
+                userDbProxy.setUserInactive(user.userId);
+                clearLocalStorage();
+                dispatch(setDisplayedModal("picker"));
+                return;
               }
             } catch (err) {
-              console.log(err)
-              dispatch(setOfflineMode(true))
+              console.log(err);
+              clearLocalStorage();
+              dispatch(setDisplayedModal("picker"));
+              return;
             }
-            navigation.navigate('TabNavigator');
           } else {
-            clearLocalStorage()
-            dispatch(setDisplayedModal('picker'));
+            dispatch(setOfflineMode(true));
           }
-          
-
         } catch (err) {
-          clearLocalStorage()
-          dispatch(setDisplayedModal('picker'));
+          console.log(err);
+          dispatch(setOfflineMode(true));
         }
-        
+        navigation.navigate("TabNavigator");
+      } catch (err) {
+        console.log(err);
+        clearLocalStorage();
+        dispatch(setDisplayedModal("picker"));
       }
-      redirectOnLoggedInUser()
+    };
+    redirectOnLoggedInUser();
   }, []);
 
   const startAnimations = () => {
@@ -131,7 +126,7 @@ export default function AuthScreen() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.viewContainer}>
         <ImageBackground
-          source={require('../../../../assets/images/splash.png')}
+          source={require("../../../../assets/images/splash.png")}
           style={styles.background}
           onLoad={() => {
             const hideSplash = async () => {
@@ -145,19 +140,19 @@ export default function AuthScreen() {
             <Text style={styles.logoText}>DayQuest</Text>
             <View style={styles.sloganBox}>
               <Text style={styles.sloganText}>Level up your habits</Text>
-              <LevelUpIcon width={40} height={40} fill={'#000000'} />
+              <LevelUpIcon width={40} height={40} fill={"#000000"} />
             </View>
           </Animated.View>
-          {activeModal === 'login' && <LoginModal />}
-          {activeModal === 'register' && <RegistrationModal />}
-          {activeModal === 'picker' && <SignInPicker />}
-          {activeModal === 'loader' && (
+          {activeModal === "login" && <LoginModal />}
+          {activeModal === "register" && <RegistrationModal />}
+          {activeModal === "picker" && <SignInPicker />}
+          {activeModal === "loader" && (
             <ActivityIndicatorLoader
               viewStyle={{ ...styles.loader, opacity: fadeLoader }}
-              text={'Checking in with the guild...'}
+              text={"Checking in with the guild..."}
               textStyle={styles.loaderText}
-              indicatorColor={'black'}
-              indicatorSize={'large'}
+              indicatorColor={"black"}
+              indicatorSize={"large"}
             />
           )}
         </ImageBackground>
@@ -168,49 +163,49 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   background: {
-    height: '100%',
-    width: '100%',
+    height: "100%",
+    width: "100%",
     zIndex: -1,
   },
   viewContainer: {
     flex: 1,
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
   },
   logoContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
     flexGrow: 1,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   sloganBox: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoText: {
     fontSize: 80,
-    fontFamily: 'euphoria',
-    width: '100%',
-    textAlign: 'center',
+    fontFamily: "euphoria",
+    width: "100%",
+    textAlign: "center",
   },
   sloganText: {
-    fontFamily: 'thonburi-light',
+    fontFamily: "thonburi-light",
     fontSize: 18,
     marginLeft: 14,
   },
   loader: {
-    width: '100%',
-    height: '20%',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    width: "100%",
+    height: "20%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "center",
   },
   loaderText: {
-    fontFamily: 'thonburi-light',
+    fontFamily: "thonburi-light",
     marginLeft: 8,
   },
 });

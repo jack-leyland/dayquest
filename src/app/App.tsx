@@ -10,6 +10,7 @@ import useColorScheme from '../common/hooks/useColorScheme';
 import Navigation from '../common/navigation';
 import store from './store';
 import { databaseInterface } from './db';
+import useDeviceId from '../common/hooks/useDeviceId';
 
 //NOTE: AuthScreen component will disable splash screen once background PNG has fully loaded.
 SplashScreen.preventAutoHideAsync();
@@ -17,12 +18,13 @@ SplashScreen.preventAutoHideAsync();
 function App() {
   const isDataLoaded = useCachedResources();
   const colorScheme = useColorScheme();
+  const deviceIdSet = useDeviceId()
 
   useEffect(() => {
     databaseInterface.initializeDatabase()
   }, []);
 
-  if (!isDataLoaded) {
+  if (!isDataLoaded && deviceIdSet) {
     return null;
   } else {
     return (

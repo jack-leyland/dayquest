@@ -135,9 +135,7 @@ export default function LoginModal() {
 
     const sendPayload = async () => {
       try {
-        const res = await authServer.post('/login', loginPayload, {
-          headers: { device: deviceId },
-        });
+        const res = await authServer.post('/login', loginPayload);
         const data = res.data as LoginAPIResponse;
 
         if (data.success && isSuccessfulLoginResponse(data)) {

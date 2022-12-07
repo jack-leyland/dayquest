@@ -23,6 +23,7 @@ export type LocalUserData = {
   userId: string | null 
 }
 
-export type UserExistsAPIReponse = {
+export type GetUserAPIReponse = {
+  user?: User
   exists: boolean
 }
