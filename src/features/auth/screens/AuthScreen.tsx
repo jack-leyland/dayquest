@@ -35,38 +35,41 @@ import { clearLocalStorage } from "../../../common/util/clearLocalStorage";
 import { verifyUser } from "../util/verifyUser";
 import userServer from "../../../app/userServer";
 import { fetchLocalUserData } from "../../../common/util/fetchLocalUserData";
+import { AppInitConfig } from "../types";
 
 export default function AuthScreen() {
   const fadeLogo = useRef(new Animated.Value(0)).current;
   const fadeLoader = useRef(new Animated.Value(0)).current;
+  
+  const [shouldNavigateHome, setNavigateHome] = useState<boolean|null>(null)
+  const [splashScreenDismissed, setSplashScreenDismissed] = useState<boolean>(false)
 
   const dispatch = useDispatch();
   const activeModal = useSelector(selectActiveModal);
   const navigation = useNavigation<RootNavigationProps>();
 
   useEffect(() => {
-    const redirectOnLoggedInUser = async () => {
+    const getInitConfig = async (): Promise<AppInitConfig>  => {
+      let result: AppInitConfig = {
+        navigateHome: false,
+        clearLocalStorage: false,
+        offlineMode: false,
+        deactivateUser: false,
+        offlineUser: false, // reserved for future functionality
+        user: null
+      }
       try {
         const localUserData = await fetchLocalUserData();
         const successfulVerification = await verifyUser(localUserData);
+
         if (!successfulVerification) {
-          clearLocalStorage();
-          dispatch(setDisplayedModal("picker"));
-          return;
+          return result;
         }
+
         const user: User = await userDbProxy.getUserRecord(
           localUserData.userId as string
         );
-        dispatch(setActiveUser(user));
-
-        if (user.isOfflineUser) {
-          dispatch(setDisplayedModal("picker"));
-          return;
-        }
-
-        //NOTE: Unclear whether this needs to be in Redux or not.
-        dispatch(setAccessToken(localUserData.access));
-        dispatch(setRefreshToken(localUserData.refresh));
+        result.user = user
 
         // Set initial connection state
         try {
@@ -81,33 +84,59 @@ export default function AuthScreen() {
               if (isActive) {
                 dispatch(setOfflineMode(false));
               } else {
-                userDbProxy.setUserInactive(user.userId);
-                clearLocalStorage();
-                dispatch(setDisplayedModal("picker"));
-                return;
+                result.clearLocalStorage = true
+                result.deactivateUser = true
+                return result;
               }
             } catch (err) {
               console.log(err);
-              clearLocalStorage();
-              dispatch(setDisplayedModal("picker"));
-              return;
+              result.clearLocalStorage = true
+              return result;
             }
           } else {
-            dispatch(setOfflineMode(true));
+            result.offlineMode = true
           }
         } catch (err) {
           console.log(err);
-          dispatch(setOfflineMode(true));
+          result.offlineMode = true
         }
-        navigation.navigate("TabNavigator");
+        result.navigateHome = true
+        return result
       } catch (err) {
         console.log(err);
-        clearLocalStorage();
-        dispatch(setDisplayedModal("picker"));
+        result.clearLocalStorage = true
+        return result
       }
     };
-    redirectOnLoggedInUser();
+
+    const runInitSequence = async () => {
+      const initConfig: AppInitConfig = await getInitConfig()
+
+      if (initConfig.clearLocalStorage) clearLocalStorage()
+      if (initConfig.user && initConfig.deactivateUser) {
+        userDbProxy.setUserInactive(initConfig.user.userId)
+      }
+      if (!initConfig.navigateHome) dispatch(setDisplayedModal("picker"))
+      dispatch(setOfflineMode(initConfig.offlineMode))
+      dispatch(setActiveUser(initConfig.user))
+      setNavigateHome(initConfig.navigateHome)
+    }
+    runInitSequence()
+
   }, []);
+
+  useEffect(()=> {
+    if (navigation && splashScreenDismissed) {
+      if (shouldNavigateHome === false) {
+        clearLocalStorage();
+        dispatch(setDisplayedModal("picker")); 
+      } else if (shouldNavigateHome === true) {
+        navigation.navigate("TabNavigator")
+      }
+    }
+  }, [navigation, shouldNavigateHome, splashScreenDismissed])
+
+
 
   const startAnimations = () => {
     Animated.timing(fadeLogo, {
@@ -131,6 +160,7 @@ export default function AuthScreen() {
           onLoad={() => {
             const hideSplash = async () => {
               await SplashScreen.hideAsync();
+              setSplashScreenDismissed(true)
             };
             hideSplash();
             startAnimations();

@@ -1,4 +1,5 @@
 import { Data } from "victory-core";
+import { User } from "../../common/types";
 
 export interface RegistrationPayload {
   email: string | null;
@@ -86,4 +87,13 @@ export function isSuccessfulLoginResponse(response: LoginAPIResponse): response 
 export function isUnsuccessfulLoginResponse(response: LoginAPIResponse): response is UnsuccessfulLoginAPIResponse {
   const arg = response as UnsuccessfulLoginAPIResponse
   return arg !== undefined &&  arg.message !== undefined && arg.badField !== undefined
+}
+
+export type AppInitConfig = {
+  navigateHome: boolean
+  clearLocalStorage: boolean
+  offlineMode: boolean
+  deactivateUser: boolean
+  offlineUser: boolean
+  user: User|null
 }
