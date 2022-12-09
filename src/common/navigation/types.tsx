@@ -10,9 +10,9 @@ export type RootStackParamList = {
 export type BottomTabParamList = {
   Home: undefined;
   Quests: undefined;
-  Achieve: undefined;
+  Medals: undefined;
   Record: undefined;
-  Stats: undefined;
+  Profile: undefined;
 };
 
 export type RootNavigationProps = StackNavigationProp<RootStackParamList>;

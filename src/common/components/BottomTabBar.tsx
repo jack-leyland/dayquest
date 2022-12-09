@@ -104,7 +104,7 @@ const ListItem = ({
             }}
         >
           <NavigationIcon routeName={routeName} color={color} size={30} />
-          <ThonburiLight style={{ color: color }}>{label}</ThonburiLight>
+          <ThonburiLight style={{ color: color, fontSize: 12 }}>{label}</ThonburiLight>
         </View>
       </Pressable>
     </View>

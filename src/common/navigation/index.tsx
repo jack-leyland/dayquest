@@ -63,8 +63,8 @@ function TabNavigator() {
       <BottomTab.Screen name="Home" component={HomeScreen} />
       <BottomTab.Screen name="Quests" component={OtherScreen} />
       <BottomTab.Screen name="Record" component={HomeScreen} />
-      <BottomTab.Screen name="Achieve" component={HomeScreen} />
-      <BottomTab.Screen name="Stats" component={OtherScreen} />
+      <BottomTab.Screen name="Medals" component={HomeScreen} />
+      <BottomTab.Screen name="Profile" component={OtherScreen} />
     </BottomTab.Navigator>
   );
 }

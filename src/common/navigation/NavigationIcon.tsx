@@ -1,4 +1,4 @@
-import { Fontisto, Ionicons } from '@expo/vector-icons';
+import { Fontisto, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { OpaqueColorValue } from 'react-native';
 
 type NavigationIconProps = {
@@ -18,9 +18,9 @@ export default function NavigationIcon({
       return <Fontisto name="home" color={color} size={size} />;
     case 'Quests':
       return <Fontisto name="compass" color={color} size={size} />;
-    case 'Achieve':
-      return <Fontisto name="calendar" color={color} size={size} />;
-    case 'Stats':
+    case 'Medals':
+      return <FontAwesome5 name="medal" color={color} size={size} />;
+    case 'Profile':
       return <Ionicons name="person" color={color} size={size} />;
     case 'Record':
       return <Fontisto name="check" color={color} size={size} />;
