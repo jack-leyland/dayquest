@@ -3,7 +3,6 @@ import {
   View,
   ImageBackground,
   Animated,
-  Text,
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
@@ -17,7 +16,6 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios"
 
-import LevelUpIcon from "../../../../assets/noun-level-up.svg";
 import { selectActiveModal, setDisplayedModal } from "../authSlice";
 import ActivityIndicatorLoader from "../../../common/components/ActivityIndicatorLoader";
 import SignInPicker from "../components/SignInPicker";
@@ -36,12 +34,13 @@ import { verifyUser } from "../util/verifyUser";
 import userServer from "../../../app/userServer";
 import { fetchLocalUserData } from "../../../common/util/fetchLocalUserData";
 import { AppInitConfig } from "../types";
+import FadeInLogo from "../components/AnimatedLogo";
 
 export default function AuthScreen() {
-  const fadeLogo = useRef(new Animated.Value(0)).current;
   const fadeLoader = useRef(new Animated.Value(0)).current;
   
   const [shouldNavigateHome, setNavigateHome] = useState<boolean|null>(null)
+  const [showLogo, setShowLogo] = useState<boolean>(false)
   const [splashScreenDismissed, setSplashScreenDismissed] = useState<boolean>(false)
 
   const dispatch = useDispatch();
@@ -144,11 +143,7 @@ export default function AuthScreen() {
 
 
   const startAnimations = () => {
-    Animated.timing(fadeLogo, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
+    setShowLogo(true)
     Animated.timing(fadeLoader, {
       toValue: 1,
       duration: 2000,
@@ -171,13 +166,7 @@ export default function AuthScreen() {
             startAnimations();
           }}
         >
-          <Animated.View style={{ ...styles.logoContainer, opacity: fadeLogo }}>
-            <Text style={styles.logoText}>DayQuest</Text>
-            <View style={styles.sloganBox}>
-              <Text style={styles.sloganText}>Level up your habits</Text>
-              <LevelUpIcon width={40} height={40} fill={"#000000"} />
-            </View>
-          </Animated.View>
+          {showLogo && <FadeInLogo fadeDuration={500} />}
           {activeModal === "login" && <LoginModal />}
           {activeModal === "register" && <RegistrationModal />}
           {activeModal === "picker" && <SignInPicker />}
@@ -207,30 +196,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     alignItems: "center",
-  },
-  logoContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    flexGrow: 1,
-    maxHeight: "80%",
-  },
-  sloganBox: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoText: {
-    fontSize: 80,
-    fontFamily: "euphoria",
-    width: "100%",
-    textAlign: "center",
-  },
-  sloganText: {
-    fontFamily: "thonburi-light",
-    fontSize: 18,
-    marginLeft: 14,
   },
   loader: {
     width: "100%",
