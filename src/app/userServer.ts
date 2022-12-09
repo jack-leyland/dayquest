@@ -25,7 +25,7 @@ userServer.interceptors.request.use(
       Promise.reject(error)
   });
 
-// If the request returns a 401, use the auth axios instance to refresh to refresh to the token
+// If the request returns a 401, use the auth axios instance to refresh the token
 userServer.interceptors.response.use((res) => {
     return res
 },
