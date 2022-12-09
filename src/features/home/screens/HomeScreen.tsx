@@ -1,5 +1,3 @@
-import { StyleSheet } from 'react-native';
-import { useSelector } from 'react-redux';
 import MainScreenLayout from '../../../common/components/MainScreenLayout';
 import { ExpHistoryChart } from '../components/ExpHistoryChart';
 import FlavorText from '../components/FlavorText';
@@ -14,5 +12,3 @@ export default function HomeScreen() {
     </MainScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({});

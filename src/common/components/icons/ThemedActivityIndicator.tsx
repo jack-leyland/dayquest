@@ -1,4 +1,3 @@
-import Colors from '../../constants/Colors';
 import { ActivityIndicator } from 'react-native';
 import { useThemeColor, ThemeProps } from '../Themed';
 import { View } from 'react-native';

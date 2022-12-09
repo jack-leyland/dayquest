@@ -12,8 +12,8 @@ import { ColorSchemeName } from 'react-native';
 import { BottomTabParamList, RootStackParamList } from './types';
 import AuthScreen from '../../features/auth/screens/AuthScreen';
 import HomeScreen from '../../features/home/screens/HomeScreen';
-import OtherScreen from '../../features/home/screens/OtherScreen';
 import GlobalErrorModal from '../components/GlobalErrorModal';
+import QuestsScreen from '../../features/quests/screens/QuestsScreen';
 
 export default function Navigation({
   colorScheme,
@@ -61,10 +61,10 @@ function TabNavigator() {
       }}
     >
       <BottomTab.Screen name="Home" component={HomeScreen} />
-      <BottomTab.Screen name="Quests" component={OtherScreen} />
-      <BottomTab.Screen name="Record" component={HomeScreen} />
-      <BottomTab.Screen name="Medals" component={HomeScreen} />
-      <BottomTab.Screen name="Profile" component={OtherScreen} />
+      <BottomTab.Screen name="Quests" component={QuestsScreen} />
+      <BottomTab.Screen name="Record" component={QuestsScreen} />
+      <BottomTab.Screen name="Medals" component={QuestsScreen} />
+      <BottomTab.Screen name="Profile" component={QuestsScreen} />
     </BottomTab.Navigator>
   );
 }
