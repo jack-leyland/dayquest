@@ -1,10 +1,10 @@
 import MainScreenLayout from '../../../common/components/MainScreenLayout';
-import { View } from 'react-native';
+import TitleBar from '../components/TitleBar';
 
 export default function QuestsScreen() {
   return (
     <MainScreenLayout>
-      <View></View>
+      <TitleBar />
     </MainScreenLayout>
   );
 }
