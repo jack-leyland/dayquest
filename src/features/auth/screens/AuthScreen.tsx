@@ -14,6 +14,8 @@ import {
   fetch as fetchNetInfo,
   NetInfoState,
 } from "@react-native-community/netinfo";
+import { useNavigation } from "@react-navigation/native";
+import axios from "axios"
 
 import LevelUpIcon from "../../../../assets/noun-level-up.svg";
 import { selectActiveModal, setDisplayedModal } from "../authSlice";
@@ -22,14 +24,12 @@ import SignInPicker from "../components/SignInPicker";
 import RegistrationModal from "../components/RegistrationModal";
 import LoginModal from "../components/LoginModal";
 import {
-  setAccessToken,
   setActiveUser,
-  setOfflineMode,
-  setRefreshToken,
+  setOfflineMode
 } from "../../../app/appSlice";
 import { userDbProxy } from "../../../app/db";
 import { GetUserAPIReponse, User} from "../../../common/types";
-import { useNavigation } from "@react-navigation/native";
+
 import { RootNavigationProps } from "../../../common/navigation/types";
 import { clearLocalStorage } from "../../../common/util/clearLocalStorage";
 import { verifyUser } from "../util/verifyUser";
@@ -89,9 +89,14 @@ export default function AuthScreen() {
                 return result;
               }
             } catch (err) {
-              console.log(err);
-              result.clearLocalStorage = true
-              return result;
+              // Allow offline use in the case of network error contacting server
+              if (axios.isAxiosError(err) && !err.response) {
+                result.offlineMode = true
+              } else {
+                console.log(err);
+                result.clearLocalStorage = true
+                return result;
+              }
             }
           } else {
             result.offlineMode = true

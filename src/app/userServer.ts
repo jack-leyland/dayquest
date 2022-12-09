@@ -30,6 +30,10 @@ userServer.interceptors.response.use((res) => {
     return res
 },
     async (err) => {
+        if (!err.response || !err.response.status) {
+          return Promise.reject(err);
+        }
+
         const originalRequest = err.config
         if (err.response.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true
